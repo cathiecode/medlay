@@ -1,9 +1,8 @@
 {
-    "name": "com.superneko.medlay.Editor",
-    "rootNamespace": "",
+    "name": "com.superneko.medlay.Editor.Burst",
+    "rootNamespace": "com.superneko.medlay.Editor.Burst",
     "references": [
-        "com.superneko.medlay.Runtime",
-        "com.superneko.medlay.Editor.Burst"
+        "Unity.Burst"
     ],
     "includePlatforms": [
         "Editor"
