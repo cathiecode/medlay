@@ -1,0 +1,14 @@
+{
+  "name": "com.superneko.medlay.Tests",
+  "references": [
+    "com.superneko.medlay.Editor",
+    "com.superneko.medlay.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
+}
