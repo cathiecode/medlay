@@ -1,5 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Mathematics;
+using static Unity.Mathematics.math;
 using UnityEngine;
 
 namespace com.superneko.medlay.Editor.Burst
@@ -54,21 +56,21 @@ namespace com.superneko.medlay.Editor.Burst
         }
 
         [BurstCompile]
-        public static void MultiplyPoint3x4(ref Matrix4x4 matrix, ref Vector3 point, out Vector3 result)
+        public static void MultiplyPoint3x4(ref Matrix4x4 matrix, ref float3 point, out float3 result)
         {
             float x = matrix.m00 * point.x + matrix.m01 * point.y + matrix.m02 * point.z + matrix.m03;
             float y = matrix.m10 * point.x + matrix.m11 * point.y + matrix.m12 * point.z + matrix.m13;
             float z = matrix.m20 * point.x + matrix.m21 * point.y + matrix.m22 * point.z + matrix.m23;
-            result = new Vector3(x, y, z);
+            result = new float3(x, y, z);
         }
 
         [BurstCompile]
-        public static void MultiplyVector(ref Matrix4x4 matrix, ref Vector3 vector, out Vector3 result)
+        public static void MultiplyVector(ref Matrix4x4 matrix, ref float3 vector, out float3 result)
         {
             float x = matrix.m00 * vector.x + matrix.m01 * vector.y + matrix.m02 * vector.z;
             float y = matrix.m10 * vector.x + matrix.m11 * vector.y + matrix.m12 * vector.z;
             float z = matrix.m20 * vector.x + matrix.m21 * vector.y + matrix.m22 * vector.z;
-            result = new Vector3(x, y, z);
+            result = new float3(x, y, z);
         }
 
         [BurstCompile]
@@ -112,13 +114,13 @@ namespace com.superneko.medlay.Editor.Burst
         public static void BakeMeshToWorld_VertexProcessing(
             int vertexCount,
             ref NativeArray<BoneWeight> boneWeights,
-            ref NativeArray<Matrix4x4> boneMatrices,
-            ref NativeArray<Vector3> vertices,
-            ref NativeArray<Vector3> normals,
-            ref NativeArray<Vector4> tangents,
-            ref NativeArray<Vector3> totalDeltaVertices,
-            ref NativeArray<Vector3> totalDeltaNormals,
-            ref NativeArray<Vector3> totalDeltaTangents
+            ref NativeArray<float4x4> boneMatrices,
+            ref NativeArray<float3> vertices,
+            ref NativeArray<float3> normals,
+            ref NativeArray<float4> tangents,
+            ref NativeArray<float3> totalDeltaVertices,
+            ref NativeArray<float3> totalDeltaNormals,
+            ref NativeArray<float3> totalDeltaTangents
         )
         {
             for (int i = 0; i < vertexCount; i++)
@@ -126,47 +128,43 @@ namespace com.superneko.medlay.Editor.Burst
 
                 var weight = boneWeights[i];
 
-                Matrix4x4 skinMatrix = Matrix4x4.zero;
+                float4x4 skinMatrix = Unity.Mathematics.float4x4.zero;
                 if (weight.weight0 > 0)
                 {
                     var boneMatrix0 = boneMatrices[weight.boneIndex0];
-                    M44.ScalarMultiply(ref boneMatrix0, weight.weight0, out var scaledMatrix0);
-                    M44.AssignAdd(ref skinMatrix, ref scaledMatrix0);
+                    skinMatrix += boneMatrices[weight.boneIndex0] * weight.weight0;
                 }
 
                 if (weight.weight1 > 0)
                 {
                     var boneMatrix1 = boneMatrices[weight.boneIndex1];
-                    M44.ScalarMultiply(ref boneMatrix1, weight.weight1, out var scaledMatrix1);
-                    M44.AssignAdd(ref skinMatrix, ref scaledMatrix1);
+                    skinMatrix += boneMatrices[weight.boneIndex1] * weight.weight1;
                 }
 
                 if (weight.weight2 > 0)
                 {
                     var boneMatrix2 = boneMatrices[weight.boneIndex2];
-                    M44.ScalarMultiply(ref boneMatrix2, weight.weight2, out var scaledMatrix2);
-                    M44.AssignAdd(ref skinMatrix, ref scaledMatrix2);
+                    skinMatrix += boneMatrices[weight.boneIndex2] * weight.weight2;
                 }
 
                 if (weight.weight3 > 0)
                 {
                     var boneMatrix3 = boneMatrices[weight.boneIndex3];
-                    M44.ScalarMultiply(ref boneMatrix3, weight.weight3, out var scaledMatrix3);
-                    M44.AssignAdd(ref skinMatrix, ref scaledMatrix3);
+                    skinMatrix += boneMatrices[weight.boneIndex3] * weight.weight3;
                 }
 
-                vertices[i] = skinMatrix.MultiplyPoint3x4(vertices[i] + totalDeltaVertices[i]);
+                vertices[i] = math.transform(skinMatrix, vertices[i] + totalDeltaVertices[i]);
 
                 if (normals.Length > 0)
                 {
-                    normals[i] = skinMatrix.MultiplyVector(normals[i] + totalDeltaNormals[i]).normalized;
+                    normals[i] = math.normalize(math.rotate(skinMatrix, normals[i] + totalDeltaNormals[i]));
                 }
 
                 if (tangents.Length > 0)
                 {
-                    Vector4 t = tangents[i];
-                    var tangentWithDelta = skinMatrix.MultiplyVector(new Vector3(t.x, t.y, t.z) + totalDeltaTangents[i]);
-                    tangents[i] = new Vector4(tangentWithDelta.x, tangentWithDelta.y, tangentWithDelta.z, t.w);
+                    float4 t = tangents[i];
+                    var tangentWithDelta = math.rotate(skinMatrix, new float3(t.x, t.y, t.z) + totalDeltaTangents[i]);
+                    tangents[i] = new float4(tangentWithDelta.x, tangentWithDelta.y, tangentWithDelta.z, t.w);
                 }
             }
         }
@@ -175,71 +173,62 @@ namespace com.superneko.medlay.Editor.Burst
         public static void UnbakeMeshToLocal_VertexProcessing(
             int vertexCount,
             ref NativeArray<BoneWeight> boneWeights,
-            ref NativeArray<Matrix4x4> boneMatrices,
-            ref NativeArray<Vector3> vertices,
-            ref NativeArray<Vector3> normals,
-            ref NativeArray<Vector4> tangents,
-            ref NativeArray<Vector3> totalDeltaVertices,
-            ref NativeArray<Vector3> totalDeltaNormals,
-            ref NativeArray<Vector3> totalDeltaTangents
+            ref NativeArray<float4x4> boneMatrices,
+            ref NativeArray<float3> vertices,
+            ref NativeArray<float3> normals,
+            ref NativeArray<float4> tangents,
+            ref NativeArray<float3> totalDeltaVertices,
+            ref NativeArray<float3> totalDeltaNormals,
+            ref NativeArray<float3> totalDeltaTangents
         )
         {
             for (int i = 0; i < vertexCount; i++)
             {
                 var weight = boneWeights[i];
 
-                Matrix4x4 skinMatrixSum = Matrix4x4.zero;
+                float4x4 skinMatrixSum = Unity.Mathematics.float4x4.zero;
 
                 if (weight.weight0 > 0) {
                     var boneMatrix0 = boneMatrices[weight.boneIndex0];
-                    M44.ScalarMultiply(ref boneMatrix0, weight.weight0, out var scaledMatrix0);
-                    M44.AssignAdd(ref skinMatrixSum, ref scaledMatrix0);
+                    skinMatrixSum += boneMatrix0 * weight.weight0;
                 }
 
                 if (weight.weight1 > 0) {
                     var boneMatrix1 = boneMatrices[weight.boneIndex1];
-                    M44.ScalarMultiply(ref boneMatrix1, weight.weight1, out var scaledMatrix1);
-                    M44.AssignAdd(ref skinMatrixSum, ref scaledMatrix1);
+                    skinMatrixSum += boneMatrix1 * weight.weight1;
                 }
 
                 if (weight.weight2 > 0) {
                     var boneMatrix2 = boneMatrices[weight.boneIndex2];
-                    M44.ScalarMultiply(ref boneMatrix2, weight.weight2, out var scaledMatrix2);
-                    M44.AssignAdd(ref skinMatrixSum, ref scaledMatrix2);
+                    skinMatrixSum += boneMatrix2 * weight.weight2;
                 }
 
                 if (weight.weight3 > 0) {
                     var boneMatrix3 = boneMatrices[weight.boneIndex3];
-                    M44.ScalarMultiply(ref boneMatrix3, weight.weight3, out var scaledMatrix3);
-                    M44.AssignAdd(ref skinMatrixSum, ref scaledMatrix3);
+                    skinMatrixSum += boneMatrix3 * weight.weight3;
                 }
 
-                Matrix4x4 invSkinMatrix = Matrix4x4.identity;
-                if (!Matrix4x4.Inverse3DAffine(skinMatrixSum, ref invSkinMatrix))
-                {
-                    invSkinMatrix = skinMatrixSum.inverse;
-                }
+                float4x4 invSkinMatrix = math.inverse(skinMatrixSum);
 
-
-                Vector3 unskinnedPos = invSkinMatrix.MultiplyPoint3x4(vertices[i]);
+                float3 unskinnedPos = math.transform(invSkinMatrix, vertices[i]);
 
                 vertices[i] = unskinnedPos - totalDeltaVertices[i];
 
                 if (normals.Length > 0)
                 {
-                    Vector3 unskinnedNormal = invSkinMatrix.MultiplyVector(normals[i]);
-                    normals[i] = (unskinnedNormal - totalDeltaNormals[i]).normalized;
+                    float3 unskinnedNormal = math.rotate(invSkinMatrix, normals[i]);
+                    normals[i] = normalize(unskinnedNormal - totalDeltaNormals[i]);
                 }
 
                 if (tangents.Length > 0)
                 {
-                    Vector4 t = tangents[i];
-                    Vector3 unskinnedTangent = invSkinMatrix.MultiplyVector(new Vector3(t.x, t.y, t.z));
-                    Vector3 finalTangent = (unskinnedTangent - totalDeltaTangents[i]).normalized;
-                    tangents[i] = new Vector4(finalTangent.x, finalTangent.y, finalTangent.z, t.w);
+                    float4 t = tangents[i];
+                    float3 unskinnedTangent = math.rotate(invSkinMatrix, new float3(t.x, t.y, t.z));
+                    float3 finalTangent = normalize(unskinnedTangent - totalDeltaTangents[i]);
+                    tangents[i] = new float4(finalTangent.x, finalTangent.y, finalTangent.z, t.w);
                 }
             }
-
         }
     }
 }
+

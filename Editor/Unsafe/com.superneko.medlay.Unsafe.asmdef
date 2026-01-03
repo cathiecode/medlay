@@ -1,17 +1,15 @@
 {
-    "name": "com.superneko.medlay.Editor",
+    "name": "Unsafe",
     "rootNamespace": "",
     "references": [
-        "com.superneko.medlay.Runtime",
-        "com.superneko.medlay.Editor.Burst",
-        "Unsafe",
-        "Unity.Mathematics"
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:2665a8d13d1b3f18800f46e256720795"
     ],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": false,

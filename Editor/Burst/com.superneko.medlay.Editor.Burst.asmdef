@@ -2,7 +2,8 @@
     "name": "com.superneko.medlay.Editor.Burst",
     "rootNamespace": "com.superneko.medlay.Editor.Burst",
     "references": [
-        "Unity.Burst"
+        "Unity.Burst",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"

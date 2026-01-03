@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using com.superneko.medlay.Editor.Burst;
+using com.superneko.medlay.Editor.Unsafe;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
+using Unity.Mathematics;
+using static Unity.Mathematics.math;
 
 namespace com.superneko.medlay.Editor
 {
@@ -45,18 +48,15 @@ namespace com.superneko.medlay.Editor
     public class MeshBakeProcessor
     {
         int vertexCount = 0;
-        NativeArray<Vector3> vertices;
-        NativeArray<Vector3> normals;
-        NativeArray<Vector4> tangents;
 
         List<Matrix4x4> bindPoses = new List<Matrix4x4>();
         List<BoneWeight> tmpBoneWeights = new List<BoneWeight>();
         NativeArray<BoneWeight> boneWeights;
-        NativeArray<Matrix4x4> boneMatrices;
+        NativeArray<float4x4> boneMatrices;
 
-        NativeArray<Vector3> totalDeltaVertices;
-        NativeArray<Vector3> totalDeltaNormals;
-        NativeArray<Vector3> totalDeltaTangents;
+        NativeArray<float3> totalDeltaVertices;
+        NativeArray<float3> totalDeltaNormals;
+        NativeArray<float3> totalDeltaTangents;
 
         Vector3[] deltaVertices = new Vector3[0];
         Vector3[] deltaNormals = new Vector3[0];
@@ -64,9 +64,6 @@ namespace com.superneko.medlay.Editor
 
         ~MeshBakeProcessor()
         {
-            if (vertices.IsCreated) vertices.Dispose();
-            if (normals.IsCreated) normals.Dispose();
-            if (tangents.IsCreated) tangents.Dispose();
             if (boneWeights.IsCreated) boneWeights.Dispose();
             if (boneMatrices.IsCreated) boneMatrices.Dispose();
             if (totalDeltaVertices.IsCreated) totalDeltaVertices.Dispose();
@@ -74,53 +71,23 @@ namespace com.superneko.medlay.Editor
             if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
         }
 
-        public void ResetArrays(SkinnedMeshRenderer smr, Mesh mesh)
+        public void ResetArrays(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
         {
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays");
 
-            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AcquireAndPopulateMeshData");
-            using var meshDataArray = Mesh.AcquireReadOnlyMeshData(mesh);
-            var meshData = meshDataArray[0];
+            vertexCount = meshData.vertexCount;
 
-            vertexCount = mesh.vertexCount;
-
-            if (vertices.Length != vertexCount)
+            if (bindPoses.Count != meshData.BaseMesh.bindposeCount)
             {
-                if (vertices.IsCreated) vertices.Dispose();
-                vertices = new NativeArray<Vector3>(vertexCount, Allocator.Persistent);
-            }
-
-            meshData.GetVertices(vertices);
-
-            if (mesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Normal) && normals.Length != vertexCount)
-            {
-                if (normals.IsCreated) normals.Dispose();
-                normals = new NativeArray<Vector3>(vertexCount, Allocator.Persistent);
-            }
-
-            meshData.GetNormals(normals);
-
-            if (mesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.Tangent) && tangents.Length != vertexCount)
-            {
-                if (tangents.IsCreated) tangents.Dispose();
-                tangents = new NativeArray<Vector4>(vertexCount, Allocator.Persistent);
-            }
-
-            meshData.GetTangents(tangents);
-
-            Profiler.EndSample();
-
-            if (bindPoses.Count != mesh.bindposeCount)
-            {
-                if (mesh.bindposeCount == 0)
+                if (meshData.BaseMesh.bindposeCount == 0)
                 {
 
                 }
 
-                bindPoses = new List<Matrix4x4>(new Matrix4x4[mesh.bindposeCount]);
+                bindPoses = new List<Matrix4x4>(new Matrix4x4[meshData.BaseMesh.bindposeCount]);
             }
 
-            mesh.GetBindposes(bindPoses);
+            meshData.BaseMesh.GetBindposes(bindPoses);
 
             if (boneWeights.Length != vertexCount)
             {
@@ -131,7 +98,7 @@ namespace com.superneko.medlay.Editor
                 Profiler.EndSample();
             }
 
-            mesh.GetBoneWeights(tmpBoneWeights);
+            meshData.BaseMesh.GetBoneWeights(tmpBoneWeights);
 
             boneWeights.CopyFrom(tmpBoneWeights.ToArray());
 
@@ -146,7 +113,7 @@ namespace com.superneko.medlay.Editor
             {
                 Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateBoneMatrices");
                 if (boneMatrices.IsCreated) boneMatrices.Dispose();
-                boneMatrices = new NativeArray<Matrix4x4>(smr.bones.Length, Allocator.Persistent);
+                boneMatrices = new NativeArray<float4x4>(smr.bones.Length, Allocator.Persistent);
                 Profiler.EndSample();
             }
 
@@ -154,17 +121,17 @@ namespace com.superneko.medlay.Editor
             if (totalDeltaVertices.Length != vertexCount)
             {
                 if (totalDeltaVertices.IsCreated) totalDeltaVertices.Dispose();
-                totalDeltaVertices = new NativeArray<Vector3>(vertexCount, Allocator.Persistent);
+                totalDeltaVertices = new NativeArray<float3>(vertexCount, Allocator.Persistent);
             }
             if (totalDeltaNormals.Length != vertexCount)
             {
                 if (totalDeltaNormals.IsCreated) totalDeltaNormals.Dispose();
-                totalDeltaNormals = new NativeArray<Vector3>(vertexCount, Allocator.Persistent);
+                totalDeltaNormals = new NativeArray<float3>(vertexCount, Allocator.Persistent);
             }
             if (totalDeltaTangents.Length != vertexCount)
             {
                 if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
-                totalDeltaTangents = new NativeArray<Vector3>(vertexCount, Allocator.Persistent);
+                totalDeltaTangents = new NativeArray<float3>(vertexCount, Allocator.Persistent);
             }
             if (deltaVertices.Length != vertexCount)
             {
@@ -191,17 +158,21 @@ namespace com.superneko.medlay.Editor
             Profiler.EndSample();
         }
 
-        public void BakeMeshToWorld(Mesh meshToBake, SkinnedMeshRenderer smr, Mesh bakedMesh)
+        public void BakeMeshToWorld(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
         {
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld");
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_Setup");
 
-            ResetArrays(smr, meshToBake);
+            var vertices = meshData.GetVertices();
+            var normals = meshData.GetNormals();
+            var tangents = meshData.GetTangents();
+
+            ResetArrays(meshData, smr);
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_BlendShape");
 
-            int blendShapeCount = bakedMesh.blendShapeCount;
+            int blendShapeCount = meshData.BaseMesh.blendShapeCount;
 
             for (int i = 0; i < blendShapeCount; i++)
             {
@@ -209,14 +180,14 @@ namespace com.superneko.medlay.Editor
                 if (weight <= 0) continue;
                 float weightNormalized = weight / 100f;
 
-                int frameIndex = bakedMesh.GetBlendShapeFrameCount(i) - 1;
-                bakedMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+                int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
+                meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
 
                 for (int v = 0; v < vertexCount; v++)
                 {
-                    totalDeltaVertices[v] += deltaVertices[v] * weightNormalized;
-                    totalDeltaNormals[v] += deltaNormals[v] * weightNormalized;
-                    totalDeltaTangents[v] += deltaTangents[v] * weightNormalized;
+                    totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
+                    totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
+                    totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
                 }
             }
 
@@ -240,39 +211,38 @@ namespace com.superneko.medlay.Editor
 
             Profiler.EndSample();
 
-            bakedMesh.SetVertices(vertices);
-            bakedMesh.SetNormals(normals);
-            bakedMesh.SetTangents(tangents);
-
             Profiler.EndSample();
         }
 
-        public void UnBakeMeshFromWorld(Mesh bakedMesh, SkinnedMeshRenderer smr, Mesh unbakedMesh)
+        public void UnBakeMeshFromWorld(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
         {
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh");
 
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_Setup");
 
-            ResetArrays(smr, bakedMesh);
+            var vertices = meshData.GetVertices();
+            var normals = meshData.GetNormals();
+            var tangents = meshData.GetTangents();
+
+            ResetArrays(meshData, smr);
 
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_BlendShape");
 
-            int blendShapeCount = bakedMesh.blendShapeCount;
-
+            int blendShapeCount = meshData.BaseMesh.blendShapeCount;
             for (int i = 0; i < blendShapeCount; i++)
             {
                 float weight = smr.GetBlendShapeWeight(i);
                 if (weight <= 0) continue;
                 float weightNormalized = weight / 100f;
 
-                int frameIndex = bakedMesh.GetBlendShapeFrameCount(i) - 1;
-                bakedMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+                int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
+                meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
 
                 for (int v = 0; v < vertexCount; v++)
                 {
-                    totalDeltaVertices[v] += deltaVertices[v] * weightNormalized;
-                    if (normals.Length > 0) totalDeltaNormals[v] += deltaNormals[v] * weightNormalized;
-                    if (tangents.Length > 0) totalDeltaTangents[v] += deltaTangents[v] * weightNormalized;
+                    totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
+                    if (normals.Length > 0) totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
+                    if (tangents.Length > 0) totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
                 }
             }
 
@@ -295,10 +265,6 @@ namespace com.superneko.medlay.Editor
             );
 
             Profiler.EndSample();
-
-            unbakedMesh.SetVertices(vertices);
-            unbakedMesh.SetNormals(normals);
-            unbakedMesh.SetTangents(tangents);
 
             Profiler.EndSample();
         }

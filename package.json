@@ -3,5 +3,8 @@
     "version": "0.1.0-alpha.20260101",
     "unity": "2022.3",
     "description": "Non-destructive mesh deformation framework for Unity.",
-    "displayName": "Medlay: Mesh deformation layering framework"
+    "displayName": "Medlay: Mesh deformation layering framework",
+    "dependencies": {
+        "com.unity.mathematics": "1.3.3"
+    }
 }

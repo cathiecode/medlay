@@ -17,9 +17,11 @@ namespace com.superneko.medlay.Tests
 
             var bakedMesh = Object.Instantiate(smr.sharedMesh);
 
+            using var writableMeshData = MedlayWritableMeshData.Create(smr.sharedMesh, Unity.Collections.Allocator.Temp);
+
             Assert.DoesNotThrow(() =>
             {
-                new MeshBakeProcessor().BakeMeshToWorld(smr.sharedMesh, smr, bakedMesh);
+                new MeshBakeProcessor().BakeMeshToWorld(writableMeshData, smr);
             });
         }
 
@@ -30,10 +32,16 @@ namespace com.superneko.medlay.Tests
             var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
             var originalMesh = smr.sharedMesh;
             var bakedMesh = Object.Instantiate(originalMesh);
-            new MeshBakeProcessor().BakeMeshToWorld(originalMesh, smr, bakedMesh);
+
+            using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
+            new MeshBakeProcessor().BakeMeshToWorld(writableMeshData, smr);
+            MedlayWritableMeshData.Writeback(writableMeshData, bakedMesh);
+            
             Assert.AreEqual(originalMesh.vertexCount, bakedMesh.vertexCount);
+
             var originalVertices = originalMesh.vertices;
             var bakedVertices = bakedMesh.vertices;
+
             for (int i = 0; i < originalMesh.vertexCount; i++)
             {
                 Assert.Greater((originalVertices[i] - bakedVertices[i]).magnitude, 0.0001f, $"Vertex {i} matches unexpectedly.");
@@ -49,13 +57,13 @@ namespace com.superneko.medlay.Tests
 
             var bakedMesh = Object.Instantiate(smr.sharedMesh);
 
-            new MeshBakeProcessor().BakeMeshToWorld(smr.sharedMesh, smr, bakedMesh);
+            using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
 
-            var unbakedMesh = Object.Instantiate(smr.sharedMesh);
+            new MeshBakeProcessor().BakeMeshToWorld(writableMeshData, smr);
 
             Assert.DoesNotThrow(() =>
             {
-                new MeshBakeProcessor().UnBakeMeshFromWorld(bakedMesh, smr, unbakedMesh);
+                new MeshBakeProcessor().UnBakeMeshFromWorld(writableMeshData, smr);
             });
         }
 
@@ -66,22 +74,22 @@ namespace com.superneko.medlay.Tests
             var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
             var originalMesh = smr.sharedMesh;
 
-            var bakedMesh = Object.Instantiate(originalMesh);
-            new MeshBakeProcessor().BakeMeshToWorld(originalMesh, smr, bakedMesh);
+            var modifiedMesh = Object.Instantiate(originalMesh);
+            using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
+            new MeshBakeProcessor().BakeMeshToWorld(modifiedMeshData, smr);
+            new MeshBakeProcessor().UnBakeMeshFromWorld(modifiedMeshData, smr);
+            MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
 
-            var unbakedMesh = Object.Instantiate(originalMesh);
-            new MeshBakeProcessor().UnBakeMeshFromWorld(bakedMesh, smr, unbakedMesh);
-
-            Assert.AreEqual(originalMesh.vertexCount, unbakedMesh.vertexCount);
+            Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
 
             var originalVertices = originalMesh.vertices;
-            var unbakedVertices = unbakedMesh.vertices;
+            var modifiedVertices = modifiedMesh.vertices;
 
             var originalNormals = originalMesh.normals;
-            var unbakedNormals = unbakedMesh.normals;
+            var modifiedNormals = modifiedMesh.normals;
 
             var originalTangents = originalMesh.tangents;
-            var unbakedTangents = unbakedMesh.tangents;
+            var modifiedTangents = modifiedMesh.tangents;
 
             var totalVerticesError = 0f;
             var totalNormalsError = 0f;
@@ -93,9 +101,9 @@ namespace com.superneko.medlay.Tests
 
             for (int i = 0; i < originalMesh.vertexCount; i++)
             {
-                var vertexError = (originalVertices[i] - unbakedVertices[i]).magnitude;
-                var normalError = (originalNormals[i] - unbakedNormals[i]).magnitude;
-                var tangentError = (originalTangents[i] - unbakedTangents[i]).magnitude;
+                var vertexError = (originalVertices[i] - modifiedVertices[i]).magnitude;
+                var normalError = (originalNormals[i] - modifiedNormals[i]).magnitude;
+                var tangentError = (originalTangents[i] - modifiedTangents[i]).magnitude;
 
                 Assert.Less(vertexError, 0.001f, $"Vertex {i} does not match.");
                 Assert.Less(normalError, 0.001f, $"Normal {i} does not match.");
@@ -134,8 +142,7 @@ namespace com.superneko.medlay.Tests
 
             var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
 
-            var bakedMesh = Object.Instantiate(smr.sharedMesh);
-            var unbakedMesh = Object.Instantiate(smr.sharedMesh);
+            var modifiedMesh = Object.Instantiate(smr.sharedMesh);
 
             var processor = new MeshBakeProcessor();
 
@@ -143,8 +150,10 @@ namespace com.superneko.medlay.Tests
             {
                 for (int i = 0; i < 100; i++)
                 {
-                    processor.BakeMeshToWorld(smr.sharedMesh, smr, bakedMesh);
-                    processor.UnBakeMeshFromWorld(bakedMesh, smr, unbakedMesh);
+                    using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
+                    processor.BakeMeshToWorld(modifiedMeshData, smr);
+                    processor.UnBakeMeshFromWorld(modifiedMeshData, smr);
+                    MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
                 }
             });
         }

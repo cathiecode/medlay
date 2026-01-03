@@ -1,14 +1,26 @@
 {
-  "name": "com.superneko.medlay.Tests",
-  "references": [
-    "com.superneko.medlay.Editor",
-    "com.superneko.medlay.Runtime"
-  ],
-  "optionalUnityReferences": [
-    "TestAssemblies"
-  ],
-  "includePlatforms": [
-    "Editor"
-  ],
-  "excludePlatforms": []
+    "name": "com.superneko.medlay.Tests",
+    "rootNamespace": "",
+    "references": [
+        "com.superneko.medlay.Editor",
+        "com.superneko.medlay.Runtime",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

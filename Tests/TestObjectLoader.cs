@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace com.superneko.medlay.Tests
 {
     static class TestObjectLoader
@@ -6,7 +8,7 @@ namespace com.superneko.medlay.Tests
         {
             var assetPath = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
             var obj = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(assetPath);
-            return obj;
+            return Object.Instantiate(obj);
         }
     }
 }
