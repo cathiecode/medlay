@@ -92,6 +92,45 @@ namespace com.superneko.medlay.Tests
         }
 
         [Test]
+        public void UnbakeMesh_ProducesOriginalVertices_StaticMeshAssignedToSMR()
+        {
+            UnbakeMesh_ProducesOriginalVertices("10a61e39ad8edab4bbc379ca484bd361");
+        }
+
+        [Test]
+        public void UnbakeMesh_ProducesOriginalVertices_TransformZeroed()
+        {
+            UnbakeMesh_ProducesOriginalVertices("a135a5d900e527d4dafd3059aa5a4de1");
+        }
+
+        [Test]
+        public void UnbakeMesh_ProducesOriginalVertices_TransformRemoved()
+        {
+            UnbakeMesh_ProducesOriginalVertices("1f49f43f88e9f8a4b8c3dfb255a74f1b");
+        }
+
+        [Test]
+        public void UnbakeMesh_ProducesOriginalVertices_SkinnedMeshAssignedToMeshRenderer()
+        {
+            var go = TestUtils.LoadAssetByGUID<GameObject>("e194e85a0547ae242874392a3eff7e96");
+
+            var meshRenderer = go.GetComponentInChildren<MeshRenderer>();
+
+            var originalMesh = meshRenderer.GetComponent<MeshFilter>().sharedMesh;
+
+            var modifiedMesh = Object.Instantiate(originalMesh);
+            using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
+            new MeshBakeProcessor().BakeMeshToWorld(modifiedMeshData, meshRenderer);
+            new MeshBakeProcessor().UnBakeMeshFromWorld(modifiedMeshData, meshRenderer);
+            MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
+
+            Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
+
+            TestUtils.AssertMeshesAreSame(originalMesh, modifiedMesh);
+
+        }
+
+        [Test]
         public void MeshBakeProcessor_SequencialProcess()
         {
             var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");

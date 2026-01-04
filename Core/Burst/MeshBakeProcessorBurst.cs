@@ -133,6 +133,10 @@ namespace com.superneko.medlay.Core.Burst
                 {
                     var boneMatrix0 = boneMatrices[weight.boneIndex0];
                     skinMatrix += boneMatrices[weight.boneIndex0] * weight.weight0;
+                } else
+                {
+                    // Processing a static mesh assigned to a SkinnedMeshRenderer
+                    skinMatrix = boneMatrices[0];
                 }
 
                 if (weight.weight1 > 0)
@@ -191,6 +195,10 @@ namespace com.superneko.medlay.Core.Burst
                 if (weight.weight0 > 0) {
                     var boneMatrix0 = boneMatrices[weight.boneIndex0];
                     skinMatrixSum += boneMatrix0 * weight.weight0;
+                } else
+                {
+                    // Processing a static mesh assigned to a SkinnedMeshRenderer
+                    skinMatrixSum = boneMatrices[0];
                 }
 
                 if (weight.weight1 > 0) {

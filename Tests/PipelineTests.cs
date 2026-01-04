@@ -81,5 +81,54 @@ namespace com.superneko.medlay.Tests
 
             Assert.IsTrue(meshEditLayerProcessor.called);
         }
+
+        [Test]
+        public void ProcessPipeline_CanProcessMeshRenderer()
+        {
+            var medlay = new Medlay();
+            
+            var mr = TestUtils.LoadAssetByGUID<MeshRenderer>("2c2374503af4cd64da6dced339c0d2bd");
+
+            Assert.DoesNotThrow(() => {
+                medlay.CreatePipeline(mr, new MeshEditLayer[0]).Process();
+            });
+        }
+
+        [Test]
+        public void ProcessPipeline_CanProcessInvalidSMR()
+        {
+            var medlay = new Medlay();
+
+            var smr = TestUtils.LoadAvatarSMR("10a61e39ad8edab4bbc379ca484bd361");
+
+            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
+
+            pipeline.Process();
+
+            var deformedMesh = pipeline.GetDeformedMesh();
+
+            TestUtils.AssertMeshesAreSame(smr.sharedMesh, deformedMesh);
+            TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
+        }
+
+        [Test]
+        public void ProcessPipeline_ProcessMeshRenderer_ProducesSameMesh()
+        {
+            var medlay = new Medlay();
+
+            var mr = TestUtils.LoadAssetByGUID<MeshRenderer>("2c2374503af4cd64da6dced339c0d2bd");
+            var mf = mr.GetComponent<MeshFilter>();
+
+            var originalMesh = mf.sharedMesh;
+
+            var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[0]);
+
+            pipeline.Process();
+
+            var deformedMesh = pipeline.GetDeformedMesh();
+
+            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh);
+            TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
+        }
     }
 }

@@ -86,9 +86,25 @@ namespace com.superneko.medlay.Tests
                 if (!allowExactMatch)
                 {
                     Assert.Fail("Meshes are exactly the same. This might indicate that no modifications were applied.");
-                } else
+                }
+                else
                 {
                     Debug.LogWarning("Meshes are exactly the same.");
+                }
+            }
+        }
+
+        public static void AssertMeshDoesNotHaveNaN(Mesh mesh)
+        {
+            var vertices = mesh.vertices;
+            var normals = mesh.normals;
+            var tangents = mesh.tangents;
+
+            for (int i = 0; i < mesh.vertexCount; i++)
+            {
+                if (float.IsNaN(vertices[i].magnitude) || float.IsNaN(normals[i].magnitude) || float.IsNaN(tangents[i].magnitude))
+                {
+                    Assert.Fail("Mesh includes NaN");
                 }
             }
         }

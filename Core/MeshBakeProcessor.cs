@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using Unity.Mathematics;
 using static Unity.Mathematics.math;
+using System.Linq.Expressions;
 
 namespace com.superneko.medlay.Core
 {
@@ -71,23 +72,25 @@ namespace com.superneko.medlay.Core
             if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
         }
 
-        void ResetArrays(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
+        void ResetArrays(MedlayWritableMeshData meshData, Renderer renderer)
         {
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays");
 
             vertexCount = meshData.vertexCount;
 
-            if (bindPoses.Count != meshData.BaseMesh.bindposeCount)
+            if (meshData.BaseMesh.bindposeCount == 0)
             {
-                if (meshData.BaseMesh.bindposeCount == 0)
+                bindPoses = new List<Matrix4x4>(new Matrix4x4[] { Matrix4x4.identity });
+            }
+            else
+            {
+                if (bindPoses.Count != meshData.BaseMesh.bindposeCount)
                 {
-
+                    bindPoses = new List<Matrix4x4>(new Matrix4x4[meshData.BaseMesh.bindposeCount]);
                 }
 
-                bindPoses = new List<Matrix4x4>(new Matrix4x4[meshData.BaseMesh.bindposeCount]);
+                meshData.BaseMesh.GetBindposes(bindPoses);
             }
-
-            meshData.BaseMesh.GetBindposes(bindPoses);
 
             if (boneWeights.Length != vertexCount)
             {
@@ -102,19 +105,61 @@ namespace com.superneko.medlay.Core
 
             boneWeights.CopyFrom(tmpBoneWeights.ToArray());
 
-            if (smr.bones.Length != bindPoses.Count)
+            if (renderer is SkinnedMeshRenderer)
             {
-                Profiler.EndSample();
-                // TODO: Handle
-                throw new Exception("Bone count mismatch between SkinnedMeshRenderer and Mesh bindposes.");
-            }
+                var smr = renderer as SkinnedMeshRenderer;
 
-            if (smr.bones.Length != boneMatrices.Length)
+                if (smr.bones.Length != bindPoses.Count)
+                {
+                    if (bindPoses.Count == 1)
+                    {
+                        // Static mesh assigned to SMR
+                        if (boneMatrices.IsCreated) boneMatrices.Dispose();
+                        boneMatrices = new NativeArray<float4x4>(1, Allocator.Persistent);
+                        boneMatrices[0] = renderer.transform.localToWorldMatrix;
+                    }
+                    else
+                    {
+                        Profiler.EndSample();
+                        // TODO: Handle
+                        throw new Exception("Bone count mismatch between SkinnedMeshRenderer and Mesh bindposes.");
+                    }
+                }
+                else
+                {
+                    if (smr.bones.Length != boneMatrices.Length)
+                    {
+                        Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateBoneMatrices");
+                        if (boneMatrices.IsCreated) boneMatrices.Dispose();
+                        boneMatrices = new NativeArray<float4x4>(smr.bones.Length, Allocator.Persistent);
+                        Profiler.EndSample();
+                    }
+
+                    var bones = smr.bones;
+
+                    for (int i = 0; i < bones.Length; i++)
+                    {
+                        var bone = bones[i];
+                        if (bone == null)
+                        {
+                            boneMatrices[i] = Matrix4x4.identity;
+                        } else
+                        {
+                            boneMatrices[i] = bones[i].localToWorldMatrix * bindPoses[i].inverse;
+                        }
+                    }
+                }
+            }
+            else
             {
-                Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateBoneMatrices");
                 if (boneMatrices.IsCreated) boneMatrices.Dispose();
-                boneMatrices = new NativeArray<float4x4>(smr.bones.Length, Allocator.Persistent);
-                Profiler.EndSample();
+
+                boneMatrices = new NativeArray<float4x4>(bindPoses.Count, Allocator.Persistent);
+
+                for (int i = 0; i < boneMatrices.Length; i++)
+                {
+                    boneMatrices[i] = renderer.transform.localToWorldMatrix;
+                }
             }
 
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateDeltaArrays");
@@ -147,14 +192,6 @@ namespace com.superneko.medlay.Core
             }
             Profiler.EndSample();
 
-            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_CalculateBoneMatrix");
-            var bones = smr.bones;
-            for (int i = 0; i < bones.Length; i++)
-            {
-                boneMatrices[i] = bones[i].localToWorldMatrix * bindPoses[i].inverse;
-            }
-            Profiler.EndSample();
-
             Profiler.EndSample();
         }
 
@@ -164,41 +201,39 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_Setup");
 
-            if (renderer is not SkinnedMeshRenderer)
-            {
-                throw new Exception("Baking is only supported for SkinnedMeshRenderer.");
-            }
-
-            var smr = renderer as SkinnedMeshRenderer;
-
             var vertices = meshData.GetVertices();
             var normals = meshData.GetNormals();
             var tangents = meshData.GetTangents();
 
-            ResetArrays(meshData, smr);
+            ResetArrays(meshData, renderer);
 
-            Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_BlendShape");
-
-            int blendShapeCount = meshData.BaseMesh.blendShapeCount;
-
-            for (int i = 0; i < blendShapeCount; i++)
+            if (renderer is SkinnedMeshRenderer)
             {
-                float weight = smr.GetBlendShapeWeight(i);
-                if (weight <= 0) continue;
-                float weightNormalized = weight / 100f;
+                Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_BlendShape");
 
-                int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
-                meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+                var smr = renderer as SkinnedMeshRenderer;
 
-                for (int v = 0; v < vertexCount; v++)
+                int blendShapeCount = meshData.BaseMesh.blendShapeCount;
+
+                for (int i = 0; i < blendShapeCount; i++)
                 {
-                    totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
-                    totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
-                    totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
-                }
-            }
+                    float weight = smr.GetBlendShapeWeight(i);
+                    if (weight <= 0) continue;
+                    float weightNormalized = weight / 100f;
 
-            Profiler.EndSample();
+                    int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
+                    meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+
+                    for (int v = 0; v < vertexCount; v++)
+                    {
+                        totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
+                        totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
+                        totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
+                    }
+                }
+
+                Profiler.EndSample();
+            }
 
             Profiler.EndSample();
 
@@ -227,40 +262,38 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_Setup");
 
-            if (renderer is not SkinnedMeshRenderer)
-            {
-                throw new Exception("Unbaking is only supported for SkinnedMeshRenderer.");
-            }
-
-            var smr = renderer as SkinnedMeshRenderer;
-
             var vertices = meshData.GetVertices();
             var normals = meshData.GetNormals();
             var tangents = meshData.GetTangents();
 
-            ResetArrays(meshData, smr);
+            ResetArrays(meshData, renderer);
 
-            Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_BlendShape");
-
-            int blendShapeCount = meshData.BaseMesh.blendShapeCount;
-            for (int i = 0; i < blendShapeCount; i++)
+            if (renderer is SkinnedMeshRenderer)
             {
-                float weight = smr.GetBlendShapeWeight(i);
-                if (weight <= 0) continue;
-                float weightNormalized = weight / 100f;
+                var smr = renderer as SkinnedMeshRenderer;
 
-                int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
-                meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+                Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_BlendShape");
 
-                for (int v = 0; v < vertexCount; v++)
+                int blendShapeCount = meshData.BaseMesh.blendShapeCount;
+                for (int i = 0; i < blendShapeCount; i++)
                 {
-                    totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
-                    if (normals.Length > 0) totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
-                    if (tangents.Length > 0) totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
-                }
-            }
+                    float weight = smr.GetBlendShapeWeight(i);
+                    if (weight <= 0) continue;
+                    float weightNormalized = weight / 100f;
 
-            Profiler.EndSample();
+                    int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
+                    meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
+
+                    for (int v = 0; v < vertexCount; v++)
+                    {
+                        totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
+                        if (normals.Length > 0) totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
+                        if (tangents.Length > 0) totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
+                    }
+                }
+
+                Profiler.EndSample();
+            }
 
             Profiler.EndSample();
 
