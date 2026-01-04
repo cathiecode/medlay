@@ -1,5 +1,4 @@
 
-using com.superneko.medlay.Core.Unsafe;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -9,7 +8,8 @@ using UnityEngine.Profiling;
 
 namespace com.superneko.medlay.Core
 {
-    public class MedlayWritableMeshData : System.IDisposable
+    using Internal.Unsafe;
+    public sealed class MedlayWritableMeshData : System.IDisposable
     {
         Mesh baseMesh;
         MeshDataArray meshDataArray;

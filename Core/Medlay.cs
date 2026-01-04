@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace com.superneko.medlay.Core
 {
-    public class Medlay
+    public sealed class Medlay
     {
         static Medlay instance;
 

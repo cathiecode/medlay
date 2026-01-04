@@ -7,7 +7,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace com.superneko.medlay.Core.Unsafe
+namespace com.superneko.medlay.Core.Internal.Unsafe
 {
     [BurstCompile]
     public static class MeshDataAttributeWriter

@@ -19,7 +19,7 @@ namespace com.superneko.medlay.Tests
 
             Assert.DoesNotThrow(() =>
             {
-                new MeshBakeProcessor().BakeMeshToWorld(writableMeshData, smr);
+                TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
             });
         }
 
@@ -31,7 +31,7 @@ namespace com.superneko.medlay.Tests
             var bakedMesh = Object.Instantiate(originalMesh);
 
             using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
-            new MeshBakeProcessor().BakeMeshToWorld(writableMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
             MedlayWritableMeshData.Writeback(writableMeshData, bakedMesh);
             
             Assert.AreEqual(originalMesh.vertexCount, bakedMesh.vertexCount);
@@ -54,11 +54,11 @@ namespace com.superneko.medlay.Tests
 
             using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
 
-            new MeshBakeProcessor().BakeMeshToWorld(writableMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
 
             Assert.DoesNotThrow(() =>
             {
-                new MeshBakeProcessor().UnBakeMeshFromWorld(writableMeshData, smr);
+                TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(writableMeshData, smr);
             });
         }
 
@@ -70,8 +70,8 @@ namespace com.superneko.medlay.Tests
 
             var modifiedMesh = Object.Instantiate(originalMesh);
             using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
-            new MeshBakeProcessor().BakeMeshToWorld(modifiedMeshData, smr);
-            new MeshBakeProcessor().UnBakeMeshFromWorld(modifiedMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(modifiedMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(modifiedMeshData, smr);
             MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
@@ -120,8 +120,8 @@ namespace com.superneko.medlay.Tests
 
             var modifiedMesh = Object.Instantiate(originalMesh);
             using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
-            new MeshBakeProcessor().BakeMeshToWorld(modifiedMeshData, meshRenderer);
-            new MeshBakeProcessor().UnBakeMeshFromWorld(modifiedMeshData, meshRenderer);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(modifiedMeshData, meshRenderer);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(modifiedMeshData, meshRenderer);
             MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
@@ -136,7 +136,7 @@ namespace com.superneko.medlay.Tests
             var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
             var modifiedMesh = Object.Instantiate(smr.sharedMesh);
 
-            var processor = new MeshBakeProcessor();
+            var processor = TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>();
 
             Assert.DoesNotThrow(() =>
             {

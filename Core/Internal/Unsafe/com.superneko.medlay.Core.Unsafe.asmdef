@@ -1,13 +1,13 @@
 {
-    "name": "com.superneko.medlay.Core.Burst",
-    "rootNamespace": "com.superneko.medlay.Core.Burst",
+    "name": "com.superneko.medlay.Core.Internal.Unsafe",
+    "rootNamespace": "com.superneko.medlay.Core.Internal.Unsafe",
     "references": [
-        "Unity.Burst",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Unity.Burst"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": false,

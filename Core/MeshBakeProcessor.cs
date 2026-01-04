@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
-using com.superneko.medlay.Core.Burst;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Unity.Mathematics;
-using com.superneko.medlay.Core.Unsafe;
 
 namespace com.superneko.medlay.Core
 {
+    using Internal.Burst;
     /// <summary>
     /// Bakes and unbakes skinned meshes to and from world space.
     /// Please note that MeshBakeProcessor does not handle mesh attributes such as UVs, colors, triangles, etc.
     /// You will need to copy those attributes separately if needed.
     /// Specifically, bindPoses and boneWeights are read but not written back to the mesh so that they must be copied externally.
     /// </summary>
-    public class MeshBakeProcessor
+    public sealed class MeshBakeProcessor
     {
         struct BlendShapeKey
         {
@@ -58,6 +57,11 @@ namespace com.superneko.medlay.Core
         DisposableCache<(int, int), BlendShapeContainer> blendShapeCache = new DisposableCache<(int, int), BlendShapeContainer>();
 
         float[] blendShapeWeights;
+
+        internal MeshBakeProcessor()
+        {
+            
+        }
 
         ~MeshBakeProcessor()
         {

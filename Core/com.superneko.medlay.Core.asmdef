@@ -2,8 +2,8 @@
     "name": "com.superneko.medlay.Core",
     "rootNamespace": "com.superneko.medlay.Core",
     "references": [
-        "com.superneko.medlay.Core.Burst",
-        "com.superneko.medlay.Core.Unsafe",
+        "com.superneko.medlay.Core.Internal.Burst",
+        "com.superneko.medlay.Core.Internal.Unsafe",
         "Unity.Mathematics"
     ],
     "includePlatforms": [],
