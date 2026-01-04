@@ -71,7 +71,7 @@ namespace com.superneko.medlay.Core
             if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
         }
 
-        public void ResetArrays(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
+        void ResetArrays(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
         {
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays");
 
@@ -158,11 +158,18 @@ namespace com.superneko.medlay.Core
             Profiler.EndSample();
         }
 
-        public void BakeMeshToWorld(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
+        public void BakeMeshToWorld(MedlayWritableMeshData meshData, Renderer renderer)
         {
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld");
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_Setup");
+
+            if (renderer is not SkinnedMeshRenderer)
+            {
+                throw new Exception("Baking is only supported for SkinnedMeshRenderer.");
+            }
+
+            var smr = renderer as SkinnedMeshRenderer;
 
             var vertices = meshData.GetVertices();
             var normals = meshData.GetNormals();
@@ -214,11 +221,18 @@ namespace com.superneko.medlay.Core
             Profiler.EndSample();
         }
 
-        public void UnBakeMeshFromWorld(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
+        public void UnBakeMeshFromWorld(MedlayWritableMeshData meshData, Renderer renderer)
         {
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh");
 
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_Setup");
+
+            if (renderer is not SkinnedMeshRenderer)
+            {
+                throw new Exception("Unbaking is only supported for SkinnedMeshRenderer.");
+            }
+
+            var smr = renderer as SkinnedMeshRenderer;
 
             var vertices = meshData.GetVertices();
             var normals = meshData.GetNormals();

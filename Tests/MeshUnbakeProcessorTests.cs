@@ -11,9 +11,7 @@ namespace com.superneko.medlay.Tests
         [Test]
         public void BakeMeshToWorld_DoesNotThrow()
         {
-            var shapell = TestObjectLoader.LoadTestObject<GameObject>("6404d1b6bcec6c44d8dd03187a2c4d49");
-
-            var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
+            var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
 
             var bakedMesh = Object.Instantiate(smr.sharedMesh);
 
@@ -28,8 +26,7 @@ namespace com.superneko.medlay.Tests
         [Test]
         public void BakeMeshToWorld_ProducesBakedVertices()
         {
-            var shapell = TestObjectLoader.LoadTestObject<GameObject>("6404d1b6bcec6c44d8dd03187a2c4d49");
-            var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
+            var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
             var originalMesh = smr.sharedMesh;
             var bakedMesh = Object.Instantiate(originalMesh);
 
@@ -51,9 +48,7 @@ namespace com.superneko.medlay.Tests
         [Test]
         public void UnbakeMesh_DoesNotThrow()
         {
-            var shapell = TestObjectLoader.LoadTestObject<GameObject>("6404d1b6bcec6c44d8dd03187a2c4d49");
-
-            var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
+            var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
 
             var bakedMesh = Object.Instantiate(smr.sharedMesh);
 
@@ -69,9 +64,8 @@ namespace com.superneko.medlay.Tests
 
         public void UnbakeMesh_ProducesOriginalVertices(string originalGuid)
         {
-            var shapell = TestObjectLoader.LoadTestObject<GameObject>(originalGuid);
+            var smr = TestUtils.LoadAvatarSMR(originalGuid);
 
-            var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
             var originalMesh = smr.sharedMesh;
 
             var modifiedMesh = Object.Instantiate(originalMesh);
@@ -82,45 +76,7 @@ namespace com.superneko.medlay.Tests
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
 
-            var originalVertices = originalMesh.vertices;
-            var modifiedVertices = modifiedMesh.vertices;
-
-            var originalNormals = originalMesh.normals;
-            var modifiedNormals = modifiedMesh.normals;
-
-            var originalTangents = originalMesh.tangents;
-            var modifiedTangents = modifiedMesh.tangents;
-
-            var totalVerticesError = 0f;
-            var totalNormalsError = 0f;
-            var totalTangentsError = 0f;
-
-            var maxVertexError = 0f;
-            var maxNormalError = 0f;
-            var maxTangentError = 0f;
-
-            for (int i = 0; i < originalMesh.vertexCount; i++)
-            {
-                var vertexError = (originalVertices[i] - modifiedVertices[i]).magnitude;
-                var normalError = (originalNormals[i] - modifiedNormals[i]).magnitude;
-                var tangentError = (originalTangents[i] - modifiedTangents[i]).magnitude;
-
-                Assert.Less(vertexError, 0.001f, $"Vertex {i} does not match.");
-                Assert.Less(normalError, 0.001f, $"Normal {i} does not match.");
-                Assert.Less(tangentError, 0.001f, $"Tangent {i} does not match.");
-
-                totalVerticesError += vertexError;
-                totalNormalsError += normalError;
-                totalTangentsError += tangentError;
-
-                if (vertexError > maxVertexError) maxVertexError = vertexError;
-                if (normalError > maxNormalError) maxNormalError = normalError;
-                if (tangentError > maxTangentError) maxTangentError = tangentError;
-            }
-
-            Debug.Log($"Vertex error avg:{totalVerticesError / originalMesh.vertexCount}, max:{maxVertexError}");
-            Debug.Log($"Normal error avg:{totalNormalsError / originalMesh.vertexCount}, max:{maxNormalError}");
-            Debug.Log($"Tangent error avg:{totalTangentsError / originalMesh.vertexCount}, max:{maxTangentError}");
+            TestUtils.AssertMeshesAreSame(originalMesh, modifiedMesh);
         }
 
         [Test]
@@ -138,10 +94,7 @@ namespace com.superneko.medlay.Tests
         [Test]
         public void MeshBakeProcessor_SequencialProcess()
         {
-            var shapell = TestObjectLoader.LoadTestObject<GameObject>("6404d1b6bcec6c44d8dd03187a2c4d49");
-
-            var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
-
+            var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
             var modifiedMesh = Object.Instantiate(smr.sharedMesh);
 
             var processor = new MeshBakeProcessor();

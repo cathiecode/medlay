@@ -67,9 +67,7 @@ namespace com.superneko.medlay.Tests
         [Test]
         public void Writeback_ComplexSituation()
         {
-            var shapell = TestObjectLoader.LoadTestObject<GameObject>("6404d1b6bcec6c44d8dd03187a2c4d49");
-
-            var smr = shapell.GetComponentInChildren<SkinnedMeshRenderer>();
+            var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
 
             var originalVertices = smr.sharedMesh.vertices;
 

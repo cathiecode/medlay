@@ -1,7 +1,9 @@
 {
     "name": "com.superneko.medlay.Editor",
     "rootNamespace": "com.superneko.medlay.Editor",
-    "references": [],
+    "references": [
+        "com.superneko.medlay.Core"
+    ],
     "includePlatforms": [
         "Editor"
     ],

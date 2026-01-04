@@ -6,7 +6,8 @@
         "com.superneko.medlay.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "com.superneko.medlay.Editor"
     ],
     "includePlatforms": [
         "Editor"
