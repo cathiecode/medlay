@@ -111,7 +111,8 @@ namespace com.superneko.medlay.Core
                         if (bone == null)
                         {
                             boneMatrices[i] = Matrix4x4.identity;
-                        } else
+                        }
+                        else
                         {
                             boneMatrices[i] = bones[i].localToWorldMatrix * bindPoses[i];
                         }
@@ -185,6 +186,16 @@ namespace com.superneko.medlay.Core
 
                 for (int i = 0; i < blendShapeCount; i++)
                 {
+                    if (i == 0)
+                    {
+                        for (int v = 0; v < vertexCount; v++)
+                        {
+                            totalDeltaVertices[v] = float3.zero;
+                            totalDeltaNormals[v] = float3.zero;
+                            totalDeltaTangents[v] = float3.zero;
+                        }
+                    }
+
                     float weight = smr.GetBlendShapeWeight(i);
                     if (weight <= 0) continue;
                     float weightNormalized = weight / 100f;
