@@ -46,6 +46,7 @@ namespace com.superneko.medlay.Core
 
             vertexCount = meshData.vertexCount;
 
+            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BindPoses");
             if (meshData.BaseMesh.bindposeCount == 0)
             {
                 bindPoses = new List<Matrix4x4>(new Matrix4x4[] { Matrix4x4.identity });
@@ -59,7 +60,9 @@ namespace com.superneko.medlay.Core
 
                 meshData.BaseMesh.GetBindposes(bindPoses);
             }
+            Profiler.EndSample();
 
+            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneWeights");
             if (boneWeights.Length != vertexCount)
             {
                 Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateBoneWeights");
@@ -69,10 +72,17 @@ namespace com.superneko.medlay.Core
                 Profiler.EndSample();
             }
 
+            Profiler.EndSample();
+
+            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_GetBoneWeights");
             meshData.BaseMesh.GetBoneWeights(tmpBoneWeights);
+            for (int i = 0; i < tmpBoneWeights.Count; i++)
+            {
+                boneWeights[i] = tmpBoneWeights[i];
+            }
+            Profiler.EndSample();
 
-            boneWeights.CopyFrom(tmpBoneWeights.ToArray());
-
+            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneMatrices");
             if (renderer is SkinnedMeshRenderer)
             {
                 var smr = renderer as SkinnedMeshRenderer;
@@ -103,7 +113,7 @@ namespace com.superneko.medlay.Core
                         Profiler.EndSample();
                     }
 
-                    var bones = smr.bones;
+                    var bones = smr.bones; // Allocation
 
                     for (int i = 0; i < bones.Length; i++)
                     {
@@ -130,6 +140,7 @@ namespace com.superneko.medlay.Core
                     boneMatrices[i] = renderer.transform.localToWorldMatrix;
                 }
             }
+            Profiler.EndSample();
 
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateDeltaArrays");
             if (totalDeltaVertices.Length != vertexCount)
