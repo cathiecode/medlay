@@ -5,6 +5,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Unity.Mathematics;
+using com.superneko.medlay.Core.Unsafe;
 
 namespace com.superneko.medlay.Core
 {
@@ -16,6 +17,33 @@ namespace com.superneko.medlay.Core
     /// </summary>
     public class MeshBakeProcessor
     {
+        struct BlendShapeKey
+        {
+            int blendShapeId;
+            int frameIndex;
+        }
+
+        struct BlendShapeContainer : IDisposable
+        {
+            public NativeArray<float3> deltaVertices;
+            public NativeArray<float3> deltaNormals;
+            public NativeArray<float3> deltaTangents;
+
+            public BlendShapeContainer(int vertexCount)
+            {
+                deltaVertices = new NativeArray<float3>(vertexCount, Allocator.Persistent);
+                deltaNormals = new NativeArray<float3>(vertexCount, Allocator.Persistent);
+                deltaTangents = new NativeArray<float3>(vertexCount, Allocator.Persistent);
+            }
+
+            void IDisposable.Dispose()
+            {
+                if (deltaVertices.IsCreated) deltaVertices.Dispose();
+                if (deltaNormals.IsCreated) deltaNormals.Dispose();
+                if (deltaTangents.IsCreated) deltaTangents.Dispose();
+            }
+        }
+
         int vertexCount = 0;
 
         List<Matrix4x4> bindPoses = new List<Matrix4x4>();
@@ -27,9 +55,9 @@ namespace com.superneko.medlay.Core
         NativeArray<float3> totalDeltaNormals;
         NativeArray<float3> totalDeltaTangents;
 
-        Vector3[] deltaVertices = new Vector3[0];
-        Vector3[] deltaNormals = new Vector3[0];
-        Vector3[] deltaTangents = new Vector3[0];
+        DisposableCache<(int, int), BlendShapeContainer> blendShapeCache = new DisposableCache<(int, int), BlendShapeContainer>();
+
+        float[] blendShapeWeights;
 
         ~MeshBakeProcessor()
         {
@@ -38,6 +66,7 @@ namespace com.superneko.medlay.Core
             if (totalDeltaVertices.IsCreated) totalDeltaVertices.Dispose();
             if (totalDeltaNormals.IsCreated) totalDeltaNormals.Dispose();
             if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
+            blendShapeCache.Clear();
         }
 
         void ResetArrays(MedlayWritableMeshData meshData, Renderer renderer)
@@ -158,21 +187,11 @@ namespace com.superneko.medlay.Core
                 if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
                 totalDeltaTangents = new NativeArray<float3>(vertexCount, Allocator.Persistent);
             }
-            if (deltaVertices.Length != vertexCount)
-            {
-                deltaVertices = new Vector3[vertexCount];
-            }
-            if (deltaNormals.Length != vertexCount)
-            {
-                deltaNormals = new Vector3[vertexCount];
-            }
-            if (deltaTangents.Length != vertexCount)
-            {
-                deltaTangents = new Vector3[vertexCount];
-            }
             Profiler.EndSample();
 
             Profiler.EndSample();
+
+            // TODO: Blendshape invalidation
         }
 
         public void BakeMeshToWorld(MedlayWritableMeshData meshData, Renderer renderer)
@@ -189,40 +208,9 @@ namespace com.superneko.medlay.Core
 
             if (renderer is SkinnedMeshRenderer)
             {
-                Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_BlendShape");
-
                 var smr = renderer as SkinnedMeshRenderer;
 
-                int blendShapeCount = meshData.BaseMesh.blendShapeCount;
-
-                for (int i = 0; i < blendShapeCount; i++)
-                {
-                    if (i == 0)
-                    {
-                        for (int v = 0; v < vertexCount; v++)
-                        {
-                            totalDeltaVertices[v] = float3.zero;
-                            totalDeltaNormals[v] = float3.zero;
-                            totalDeltaTangents[v] = float3.zero;
-                        }
-                    }
-
-                    float weight = smr.GetBlendShapeWeight(i);
-                    if (weight <= 0) continue;
-                    float weightNormalized = weight / 100f;
-
-                    int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
-                    meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
-
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
-                        totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
-                        totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
-                    }
-                }
-
-                Profiler.EndSample();
+                UpdateTotalDelta(meshData, smr);
             }
 
             Profiler.EndSample();
@@ -244,6 +232,8 @@ namespace com.superneko.medlay.Core
             Profiler.EndSample();
 
             Profiler.EndSample();
+
+            blendShapeCache.Tick();
         }
 
         public void UnBakeMeshFromWorld(MedlayWritableMeshData meshData, Renderer renderer)
@@ -262,27 +252,7 @@ namespace com.superneko.medlay.Core
             {
                 var smr = renderer as SkinnedMeshRenderer;
 
-                Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_BlendShape");
-
-                int blendShapeCount = meshData.BaseMesh.blendShapeCount;
-                for (int i = 0; i < blendShapeCount; i++)
-                {
-                    float weight = smr.GetBlendShapeWeight(i);
-                    if (weight <= 0) continue;
-                    float weightNormalized = weight / 100f;
-
-                    int frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
-                    meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, deltaVertices, deltaNormals, deltaTangents);
-
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        totalDeltaVertices[v] += (float3)(deltaVertices[v] * weightNormalized);
-                        if (normals.Length > 0) totalDeltaNormals[v] += (float3)(deltaNormals[v] * weightNormalized);
-                        if (tangents.Length > 0) totalDeltaTangents[v] += (float3)(deltaTangents[v] * weightNormalized);
-                    }
-                }
-
-                Profiler.EndSample();
+                UpdateTotalDelta(meshData, smr);
             }
 
             Profiler.EndSample();
@@ -304,6 +274,106 @@ namespace com.superneko.medlay.Core
             Profiler.EndSample();
 
             Profiler.EndSample();
+
+            blendShapeCache.Tick();
+        }
+
+        void UpdateTotalDelta(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
+        {
+            Profiler.BeginSample("MeshBakeProcessor.UpdateTotalDelta");
+            int blendShapeCount = meshData.BaseMesh.blendShapeCount;
+
+            if (!IsBlendShapesChanged(meshData, smr))
+            {
+                Profiler.EndSample();
+                return;
+            }
+
+            MeshBakeProcessorBurst.ClearBlendShapeInfoLoop(
+                ref totalDeltaVertices,
+                ref totalDeltaNormals,
+                ref totalDeltaTangents
+            );
+
+            for (int i = 0; i < blendShapeCount; i++)
+            {
+                float weight = smr.GetBlendShapeWeight(i);
+
+                if (weight <= 0) continue;
+
+                // FIXME: Multi frame blendshape support
+
+                Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_BlendShape_CacheLookup");
+                var blendShape = blendShapeCache.GetOrCalculate((i, meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1), () =>
+                {
+                    Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_BlendShape_Calculate");
+                    var container = new BlendShapeContainer(vertexCount);
+
+                    var tmpDeltaVertices = new Vector3[vertexCount];
+                    var tmpDeltaNormals = new Vector3[vertexCount];
+                    var tmpDeltaTangents = new Vector3[vertexCount];
+
+                    var frameIndex = meshData.BaseMesh.GetBlendShapeFrameCount(i) - 1;
+
+                    meshData.BaseMesh.GetBlendShapeFrameVertices(i, frameIndex, tmpDeltaVertices, tmpDeltaNormals, tmpDeltaTangents);
+
+                    container.deltaVertices.Reinterpret<Vector3>().CopyFrom(tmpDeltaVertices);
+                    container.deltaNormals.Reinterpret<Vector3>().CopyFrom(tmpDeltaNormals);
+                    container.deltaTangents.Reinterpret<Vector3>().CopyFrom(tmpDeltaTangents);
+
+                    Profiler.EndSample();
+
+                    return container;
+                });
+                Profiler.EndSample();
+
+                float weightNormalized = weight / 100f;
+
+                MeshBakeProcessorBurst.BlendShapeAddLoop(
+                    ref totalDeltaVertices,
+                    ref totalDeltaNormals,
+                    ref totalDeltaTangents,
+                    ref blendShape.deltaVertices,
+                    ref blendShape.deltaNormals,
+                    ref blendShape.deltaTangents,
+                    weightNormalized
+                );
+            }
+            Profiler.EndSample();
+        }
+
+        bool IsBlendShapesChanged(MedlayWritableMeshData meshData, SkinnedMeshRenderer smr)
+        {
+            var changed = false;
+
+            var blendShapeCount = meshData.BaseMesh.blendShapeCount;
+
+            if (blendShapeWeights == null)
+            {
+                blendShapeWeights = new float[blendShapeCount];
+
+                changed = true;
+            }
+
+            if (blendShapeWeights.Length != blendShapeCount)
+            {
+                blendShapeWeights = new float[blendShapeCount];
+
+                changed = true;
+            }
+
+            for (int i = 0; i < blendShapeCount; i++)
+            {
+                var weight = smr.GetBlendShapeWeight(i);
+
+                if (blendShapeWeights[i] != weight)
+                {
+                    blendShapeWeights[i] = weight;
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
     }
 }

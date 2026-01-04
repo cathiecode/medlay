@@ -32,7 +32,8 @@ namespace com.superneko.medlay.Core.Burst
                 {
                     var boneMatrix0 = boneMatrices[weight.boneIndex0];
                     skinMatrix += boneMatrices[weight.boneIndex0] * weight.weight0;
-                } else
+                }
+                else
                 {
                     // Processing a static mesh assigned to a SkinnedMeshRenderer
                     skinMatrix = boneMatrices[0];
@@ -91,26 +92,31 @@ namespace com.superneko.medlay.Core.Burst
 
                 float4x4 skinMatrixSum = Unity.Mathematics.float4x4.zero;
 
-                if (weight.weight0 > 0) {
+                if (weight.weight0 > 0)
+                {
                     var boneMatrix0 = boneMatrices[weight.boneIndex0];
                     skinMatrixSum += boneMatrix0 * weight.weight0;
-                } else
+                }
+                else
                 {
                     // Processing a static mesh assigned to a SkinnedMeshRenderer
                     skinMatrixSum = boneMatrices[0];
                 }
 
-                if (weight.weight1 > 0) {
+                if (weight.weight1 > 0)
+                {
                     var boneMatrix1 = boneMatrices[weight.boneIndex1];
                     skinMatrixSum += boneMatrix1 * weight.weight1;
                 }
 
-                if (weight.weight2 > 0) {
+                if (weight.weight2 > 0)
+                {
                     var boneMatrix2 = boneMatrices[weight.boneIndex2];
                     skinMatrixSum += boneMatrix2 * weight.weight2;
                 }
 
-                if (weight.weight3 > 0) {
+                if (weight.weight3 > 0)
+                {
                     var boneMatrix3 = boneMatrices[weight.boneIndex3];
                     skinMatrixSum += boneMatrix3 * weight.weight3;
                 }
@@ -134,6 +140,40 @@ namespace com.superneko.medlay.Core.Burst
                     float3 finalTangent = normalize(unskinnedTangent - totalDeltaTangents[i]);
                     tangents[i] = new float4(finalTangent.x, finalTangent.y, finalTangent.z, t.w);
                 }
+            }
+        }
+
+        [BurstCompile]
+        public static void ClearBlendShapeInfoLoop(
+            [WriteOnly] ref NativeArray<float3> deltaVertices,
+            [WriteOnly] ref NativeArray<float3> deltaNormals,
+            [WriteOnly] ref NativeArray<float3> deltaTangents
+        )
+        {
+            for (int v = 0; v < deltaVertices.Length; v++)
+            {
+                deltaVertices[v] = Unity.Mathematics.float3.zero;
+                deltaNormals[v] = Unity.Mathematics.float3.zero;
+                deltaTangents[v] = Unity.Mathematics.float3.zero;
+            }
+        }
+
+        [BurstCompile]
+        public static void BlendShapeAddLoop(
+            [WriteOnly] ref NativeArray<float3> vertices,
+            [WriteOnly] ref NativeArray<float3> normals,
+            [WriteOnly] ref NativeArray<float3> tangents,
+            [ReadOnly] ref NativeArray<float3> deltaVertices,
+            [ReadOnly] ref NativeArray<float3> deltaNormals,
+            [ReadOnly] ref NativeArray<float3> deltaTangents,
+            float weightNormalized
+        )
+        {
+            for (int v = 0; v < vertices.Length; v++)
+            {
+                vertices[v] += deltaVertices[v] * weightNormalized;
+                normals[v] += deltaNormals[v] * weightNormalized;
+                tangents[v] += deltaTangents[v] * weightNormalized;
             }
         }
     }
