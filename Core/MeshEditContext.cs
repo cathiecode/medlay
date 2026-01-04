@@ -5,7 +5,7 @@ namespace com.superneko.medlay.Core
 {
     internal class MeshEditContext : IMeshEditContext
     {
-        public MedlayWritableMeshData WritableMeshData { get; internal set; }
+        public MedlayWritableMeshData WritableMeshData { get; set; }
 
         public Renderer OriginalRenderer { get; internal set; }
 
