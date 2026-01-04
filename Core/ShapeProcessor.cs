@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using com.superneko.medlay.Runtime;
 
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
     public class ShapeProcessor
     {

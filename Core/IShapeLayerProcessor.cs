@@ -1,7 +1,5 @@
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
-    using Runtime;
-
     public interface IShapeLayerProcessor<T> where T : ShapeLayer
     {
         public void ProcessShapeLayer(T shapeLayer, IShapeProcessContext context);

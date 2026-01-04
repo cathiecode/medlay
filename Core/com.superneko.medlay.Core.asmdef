@@ -1,13 +1,12 @@
 {
-    "name": "com.superneko.medlay.Editor.Burst",
-    "rootNamespace": "com.superneko.medlay.Editor.Burst",
+    "name": "com.superneko.medlay.Core",
+    "rootNamespace": "com.superneko.medlay.Core",
     "references": [
-        "Unity.Burst",
+        "com.superneko.medlay.Core.Burst",
+        "com.superneko.medlay.Core.Unsafe",
         "Unity.Mathematics"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

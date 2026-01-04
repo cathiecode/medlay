@@ -3,7 +3,7 @@ using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 using static UnityEngine.Mesh;
 
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
     internal class MedlayMeshUtils
     {

@@ -2,7 +2,7 @@
     "name": "com.superneko.medlay.Tests",
     "rootNamespace": "",
     "references": [
-        "com.superneko.medlay.Editor",
+        "com.superneko.medlay.Core",
         "com.superneko.medlay.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",

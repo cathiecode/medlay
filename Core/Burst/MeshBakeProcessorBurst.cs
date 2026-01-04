@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using static Unity.Mathematics.math;
 using UnityEngine;
 
-namespace com.superneko.medlay.Editor.Burst
+namespace com.superneko.medlay.Core.Burst
 {
     [BurstCompile]
     static class M44

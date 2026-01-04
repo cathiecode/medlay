@@ -1,6 +1,5 @@
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
-    using Runtime;
     internal class AnonymousShapeLayerProcessor<T> : IAnonymousShapeLayerProcessor where T : ShapeLayer
     {
         private readonly IShapeLayerProcessor<T> shapeLayerProcessor;

@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using com.superneko.medlay.Editor.Burst;
-using com.superneko.medlay.Editor.Unsafe;
+using com.superneko.medlay.Core.Burst;
+using com.superneko.medlay.Core.Unsafe;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Unity.Mathematics;
 using static Unity.Mathematics.math;
 
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
     static class Matrix4x4Extensions
     {

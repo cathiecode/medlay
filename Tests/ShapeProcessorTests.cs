@@ -2,8 +2,7 @@ using NUnit.Framework;
 
 namespace com.superneko.medlay.Tests
 {
-    using Editor;
-    using Runtime;
+    using Core;
 
     class ShapeProcessorTests
     {

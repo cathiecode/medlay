@@ -1,4 +1,4 @@
-namespace com.superneko.medlay.Runtime
+namespace com.superneko.medlay.Core
 {
     [System.Serializable]
     public abstract class ShapeLayer

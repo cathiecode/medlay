@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
     public interface IShapeProcessContext
     {

@@ -1,7 +1,5 @@
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
-    using Runtime;
-
     internal interface IAnonymousShapeLayerProcessor
     {
         void ProcessShapeLayer(ShapeLayer shapeLayer, IShapeProcessContext context);

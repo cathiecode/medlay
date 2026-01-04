@@ -1,12 +1,7 @@
 {
     "name": "com.superneko.medlay.Editor",
-    "rootNamespace": "",
-    "references": [
-        "com.superneko.medlay.Runtime",
-        "com.superneko.medlay.Editor.Burst",
-        "Unsafe",
-        "Unity.Mathematics"
-    ],
+    "rootNamespace": "com.superneko.medlay.Editor",
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],

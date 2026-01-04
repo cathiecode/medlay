@@ -1,5 +1,5 @@
 
-using com.superneko.medlay.Editor.Unsafe;
+using com.superneko.medlay.Core.Unsafe;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -7,7 +7,7 @@ using Unity.Mathematics;
 using static UnityEngine.Mesh;
 using UnityEngine.Profiling;
 
-namespace com.superneko.medlay.Editor
+namespace com.superneko.medlay.Core
 {
     public class MedlayWritableMeshData : System.IDisposable
     {

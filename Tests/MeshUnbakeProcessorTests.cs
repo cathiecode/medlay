@@ -1,4 +1,4 @@
-using com.superneko.medlay.Editor;
+using com.superneko.medlay.Core;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.VersionControl;

@@ -1,4 +1,4 @@
-using com.superneko.medlay.Editor;
+using com.superneko.medlay.Core;
 using UnityEngine;
 using Unity.Mathematics;
 using NUnit.Framework;

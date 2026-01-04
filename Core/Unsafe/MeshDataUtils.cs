@@ -3,7 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace com.superneko.medlay.Editor.Unsafe
+namespace com.superneko.medlay.Core.Unsafe
 {
     public static class MeshDataUtils
     {
