@@ -1,45 +1,13 @@
 using System;
 using System.Collections.Generic;
 using com.superneko.medlay.Core.Burst;
-using com.superneko.medlay.Core.Unsafe;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Profiling;
 using Unity.Mathematics;
-using static Unity.Mathematics.math;
-using System.Linq.Expressions;
 
 namespace com.superneko.medlay.Core
 {
-    static class Matrix4x4Extensions
-    {
-        public static Matrix4x4 ScalarMultiply(this Matrix4x4 matrix, float scalar)
-        {
-            Matrix4x4 result = new Matrix4x4();
-            for (int row = 0; row < 4; row++)
-            {
-                for (int col = 0; col < 4; col++)
-                {
-                    result[row, col] = matrix[row, col] * scalar;
-                }
-            }
-            return result;
-        }
-
-        public static Matrix4x4 Add(this Matrix4x4 a, Matrix4x4 b)
-        {
-            Matrix4x4 result = new Matrix4x4();
-            for (int row = 0; row < 4; row++)
-            {
-                for (int col = 0; col < 4; col++)
-                {
-                    result[row, col] = a[row, col] + b[row, col];
-                }
-            }
-            return result;
-        }
-    }
-
     /// <summary>
     /// Bakes and unbakes skinned meshes to and from world space.
     /// Please note that MeshBakeProcessor does not handle mesh attributes such as UVs, colors, triangles, etc.
@@ -145,7 +113,7 @@ namespace com.superneko.medlay.Core
                             boneMatrices[i] = Matrix4x4.identity;
                         } else
                         {
-                            boneMatrices[i] = bones[i].localToWorldMatrix * bindPoses[i].inverse;
+                            boneMatrices[i] = bones[i].localToWorldMatrix * bindPoses[i];
                         }
                     }
                 }
