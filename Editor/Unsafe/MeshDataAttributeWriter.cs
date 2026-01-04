@@ -9,125 +9,115 @@ using UnityEngine.Rendering;
 
 namespace com.superneko.medlay.Editor.Unsafe
 {
+    [BurstCompile]
     public static class MeshDataAttributeWriter
     {
         // =========================
         // Public API (strict)
         // =========================
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetVertices(NativeArray<float3> inVertices, Mesh.MeshData meshData)
-            => SetF3(meshData, VertexAttribute.Position, inVertices,
+        public static void SetVertices(ref NativeArray<float3> inVertices, Mesh.MeshData meshData)
+            => SetF3(meshData, VertexAttribute.Position, ref inVertices,
                 expectedDim: 3,
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: false, allowSNorm16: false,
                 allowUNorm8: false, allowUNorm16: false);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetUV0(NativeArray<float2> inUv0, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord0, inUv0,
+        public static void SetUV0(ref NativeArray<float2> inUv0, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord0, ref inUv0,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetUV1(NativeArray<float2> inUv1, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord1, inUv1,
+        public static void SetUV1(ref NativeArray<float2> inUv1, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord1, ref inUv1,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetUV2(NativeArray<float2> inUv2, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord2, inUv2,
+        public static void SetUV2(ref NativeArray<float2> inUv2, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord2, ref inUv2,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        public static void SetUV3(NativeArray<float2> inUv3, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord3, inUv3,
+        public static void SetUV3(ref NativeArray<float2> inUv3, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord3, ref inUv3,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        public static void SetUV4(NativeArray<float2> inUv4, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord4, inUv4,
+        public static void SetUV4(ref NativeArray<float2> inUv4, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord4, ref inUv4,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        public static void SetUV5(NativeArray<float2> inUv5, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord5, inUv5,
+        public static void SetUV5(ref NativeArray<float2> inUv5, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord5, ref inUv5,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        public static void SetUV6(NativeArray<float2> inUv6, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord6, inUv6,
+        public static void SetUV6(ref NativeArray<float2> inUv6, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord6, ref inUv6,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        public static void SetUV7(NativeArray<float2> inUv7, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord7, inUv7,
+        public static void SetUV7(ref NativeArray<float2> inUv7, Mesh.MeshData meshData)
+            => SetF2(meshData, VertexAttribute.TexCoord7, ref inUv7,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetNormals(NativeArray<float3> inNormals, Mesh.MeshData meshData)
-            => SetF3(meshData, VertexAttribute.Normal, inNormals,
+        public static void SetNormals(ref NativeArray<float3> inNormals, Mesh.MeshData meshData)
+            => SetF3(meshData, VertexAttribute.Normal, ref inNormals,
                 expectedDim: 3,
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: true, allowSNorm16: true,
                 allowUNorm8: false, allowUNorm16: false);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetTangents(NativeArray<float4> inTangents, Mesh.MeshData meshData)
-            => SetF4(meshData, VertexAttribute.Tangent, inTangents,
+        public static void SetTangents(ref NativeArray<float4> inTangents, Mesh.MeshData meshData)
+            => SetF4(meshData, VertexAttribute.Tangent, ref inTangents,
                 expectedDim: 4,
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: true, allowSNorm16: true,
                 allowUNorm8: false, allowUNorm16: false);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetColors(NativeArray<float4> inColors, Mesh.MeshData meshData)
-            => SetF4(meshData, VertexAttribute.Color, inColors,
+        public static void SetColors(ref NativeArray<float4> inColors, Mesh.MeshData meshData)
+            => SetF4(meshData, VertexAttribute.Color, ref inColors,
                 expectedDim: 4,
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: false, allowSNorm16: false,
                 allowUNorm8: true, allowUNorm16: true);
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetUVs(int channel, NativeArray<float2> inUvs, Mesh.MeshData meshData)
+        public static void SetUVs(int channel, ref NativeArray<float2> inUvs, Mesh.MeshData meshData)
         {
             if ((uint)channel > 7u) { Throw($"[UV] channel must be 0..7, but was {channel}."); return; }
             var attr = GetUvAttribute(channel);
 
-            SetF2(meshData, attr, inUvs,
+            SetF2(meshData, attr, ref inUvs,
                 expectedDim: 2,
                 allowFloat32: true, allowFloat16: true);
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetUVs(int channel, NativeArray<float3> inUvs, Mesh.MeshData meshData)
+        public static void SetUVs(int channel, ref NativeArray<float3> inUvs, Mesh.MeshData meshData)
         {
             if ((uint)channel > 7u) { Throw($"[UV] channel must be 0..7, but was {channel}."); return; }
             var attr = GetUvAttribute(channel);
 
-            SetF3(meshData, attr, inUvs,
+            SetF3(meshData, attr, ref inUvs,
                 expectedDim: 3,
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: false, allowSNorm16: false,
                 allowUNorm8: false, allowUNorm16: false);
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        public static void SetUVs(int channel, NativeArray<float4> inUvs, Mesh.MeshData meshData)
+        public static void SetUVs(int channel, ref NativeArray<float4> inUvs, Mesh.MeshData meshData)
         {
             if ((uint)channel > 7u) { Throw($"[UV] channel must be 0..7, but was {channel}."); return; }
             var attr = GetUvAttribute(channel);
 
-            SetF4(meshData, attr, inUvs,
+            SetF4(meshData, attr, ref inUvs,
                 expectedDim: 4,
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: false, allowSNorm16: false,
                 allowUNorm8: false, allowUNorm16: false);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static VertexAttribute GetUvAttribute(int channel)
         {
             // channel 0..7 -> TexCoord0..TexCoord7
@@ -178,11 +168,10 @@ namespace com.superneko.medlay.Editor.Unsafe
                 Throw($"[{attr}] Vertex buffer too small for computed layout.");
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
         private static void SetF2(
             Mesh.MeshData meshData,
             VertexAttribute attr,
-            NativeArray<float2> src,
+            ref NativeArray<float2> src,
             int expectedDim,
             bool allowFloat32,
             bool allowFloat16)
@@ -196,12 +185,12 @@ namespace com.superneko.medlay.Editor.Unsafe
             {
                 case VertexAttributeFormat.Float32:
                     if (!allowFloat32) Throw($"[{attr}] Float32 not allowed.");
-                    WriteFloat32_F2(src, vb, vertexCount, stride, offset);
+                    WriteFloat32_F2(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.Float16:
                     if (!allowFloat16) Throw($"[{attr}] Float16 not allowed.");
-                    WriteFloat16_F2(src, vb, vertexCount, stride, offset);
+                    WriteFloat16_F2(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 default:
@@ -210,11 +199,10 @@ namespace com.superneko.medlay.Editor.Unsafe
             }
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
         private static void SetF3(
             Mesh.MeshData meshData,
             VertexAttribute attr,
-            NativeArray<float3> src,
+            ref NativeArray<float3> src,
             int expectedDim,
             bool allowFloat32,
             bool allowFloat16,
@@ -232,32 +220,32 @@ namespace com.superneko.medlay.Editor.Unsafe
             {
                 case VertexAttributeFormat.Float32:
                     if (!allowFloat32) Throw($"[{attr}] Float32 not allowed.");
-                    WriteFloat32_F3(src, vb, vertexCount, stride, offset);
+                    WriteFloat32_F3(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.Float16:
                     if (!allowFloat16) Throw($"[{attr}] Float16 not allowed.");
-                    WriteFloat16_F3(src, vb, vertexCount, stride, offset);
+                    WriteFloat16_F3(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.SNorm8:
                     if (!allowSNorm8) Throw($"[{attr}] SNorm8 not allowed.");
-                    WriteSNorm8_F3(src, vb, vertexCount, stride, offset);
+                    WriteSNorm8_F3(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.SNorm16:
                     if (!allowSNorm16) Throw($"[{attr}] SNorm16 not allowed.");
-                    WriteSNorm16_F3(src, vb, vertexCount, stride, offset);
+                    WriteSNorm16_F3(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.UNorm8:
                     if (!allowUNorm8) Throw($"[{attr}] UNorm8 not allowed.");
-                    WriteUNorm8_F3(src, vb, vertexCount, stride, offset);
+                    WriteUNorm8_F3(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.UNorm16:
                     if (!allowUNorm16) Throw($"[{attr}] UNorm16 not allowed.");
-                    WriteUNorm16_F3(src, vb, vertexCount, stride, offset);
+                    WriteUNorm16_F3(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 default:
@@ -266,11 +254,10 @@ namespace com.superneko.medlay.Editor.Unsafe
             }
         }
 
-        [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
         private static void SetF4(
             Mesh.MeshData meshData,
             VertexAttribute attr,
-            NativeArray<float4> src,
+            ref NativeArray<float4> src,
             int expectedDim,
             bool allowFloat32,
             bool allowFloat16,
@@ -288,32 +275,32 @@ namespace com.superneko.medlay.Editor.Unsafe
             {
                 case VertexAttributeFormat.Float32:
                     if (!allowFloat32) Throw($"[{attr}] Float32 not allowed.");
-                    WriteFloat32_F4(src, vb, vertexCount, stride, offset);
+                    WriteFloat32_F4(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.Float16:
                     if (!allowFloat16) Throw($"[{attr}] Float16 not allowed.");
-                    WriteFloat16_F4(src, vb, vertexCount, stride, offset);
+                    WriteFloat16_F4(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.SNorm8:
                     if (!allowSNorm8) Throw($"[{attr}] SNorm8 not allowed.");
-                    WriteSNorm8_F4(src, vb, vertexCount, stride, offset);
+                    WriteSNorm8_F4(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.SNorm16:
                     if (!allowSNorm16) Throw($"[{attr}] SNorm16 not allowed.");
-                    WriteSNorm16_F4(src, vb, vertexCount, stride, offset);
+                    WriteSNorm16_F4(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.UNorm8:
                     if (!allowUNorm8) Throw($"[{attr}] UNorm8 not allowed.");
-                    WriteUNorm8_F4(src, vb, vertexCount, stride, offset);
+                    WriteUNorm8_F4(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 case VertexAttributeFormat.UNorm16:
                     if (!allowUNorm16) Throw($"[{attr}] UNorm16 not allowed.");
-                    WriteUNorm16_F4(src, vb, vertexCount, stride, offset);
+                    WriteUNorm16_F4(ref src, ref vb, vertexCount, stride, offset);
                     return;
 
                 default:
@@ -327,7 +314,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         // =========================
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteFloat32_F2(NativeArray<float2> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteFloat32_F2(ref NativeArray<float2> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float2* srcPtr = (float2*)src.GetUnsafeReadOnlyPtr();
@@ -340,7 +327,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteFloat32_F3(NativeArray<float3> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteFloat32_F3(ref NativeArray<float3> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float3* srcPtr = (float3*)src.GetUnsafeReadOnlyPtr();
@@ -353,7 +340,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteFloat32_F4(NativeArray<float4> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteFloat32_F4(ref NativeArray<float4> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float4* srcPtr = (float4*)src.GetUnsafeReadOnlyPtr();
@@ -370,7 +357,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         // =========================
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteFloat16_F2(NativeArray<float2> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteFloat16_F2(ref NativeArray<float2> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float2* srcPtr = (float2*)src.GetUnsafeReadOnlyPtr();
@@ -386,7 +373,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteFloat16_F3(NativeArray<float3> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteFloat16_F3(ref NativeArray<float3> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float3* srcPtr = (float3*)src.GetUnsafeReadOnlyPtr();
@@ -403,7 +390,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteFloat16_F4(NativeArray<float4> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteFloat16_F4(ref NativeArray<float4> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float4* srcPtr = (float4*)src.GetUnsafeReadOnlyPtr();
@@ -425,7 +412,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         // =========================
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteSNorm8_F3(NativeArray<float3> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteSNorm8_F3(ref NativeArray<float3> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float3* srcPtr = (float3*)src.GetUnsafeReadOnlyPtr();
@@ -440,7 +427,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteSNorm16_F3(NativeArray<float3> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteSNorm16_F3(ref NativeArray<float3> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float3* srcPtr = (float3*)src.GetUnsafeReadOnlyPtr();
@@ -456,7 +443,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteSNorm8_F4(NativeArray<float4> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteSNorm8_F4(ref NativeArray<float4> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float4* srcPtr = (float4*)src.GetUnsafeReadOnlyPtr();
@@ -472,7 +459,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteSNorm16_F4(NativeArray<float4> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteSNorm16_F4(ref NativeArray<float4> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float4* srcPtr = (float4*)src.GetUnsafeReadOnlyPtr();
@@ -493,7 +480,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         // =========================
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteUNorm8_F4(NativeArray<float4> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteUNorm8_F4(ref NativeArray<float4> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float4* srcPtr = (float4*)src.GetUnsafeReadOnlyPtr();
@@ -509,7 +496,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteUNorm16_F4(NativeArray<float4> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteUNorm16_F4(ref NativeArray<float4> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float4* srcPtr = (float4*)src.GetUnsafeReadOnlyPtr();
@@ -527,7 +514,7 @@ namespace com.superneko.medlay.Editor.Unsafe
 
         // Optional: UNorm for float3 (not used by current public API)
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteUNorm8_F3(NativeArray<float3> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteUNorm8_F3(ref NativeArray<float3> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float3* srcPtr = (float3*)src.GetUnsafeReadOnlyPtr();
@@ -542,7 +529,7 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
 
         [BurstCompile(FloatPrecision.Standard, FloatMode.Fast)]
-        private static unsafe void WriteUNorm16_F3(NativeArray<float3> src, NativeArray<byte> dst, int n, int stride, int offset)
+        private static unsafe void WriteUNorm16_F3(ref NativeArray<float3> src, ref NativeArray<byte> dst, int n, int stride, int offset)
         {
             byte* dstBase = (byte*)dst.GetUnsafePtr() + offset;
             float3* srcPtr = (float3*)src.GetUnsafeReadOnlyPtr();
@@ -664,3 +651,4 @@ namespace com.superneko.medlay.Editor.Unsafe
         }
     }
 }
+

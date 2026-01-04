@@ -91,23 +91,34 @@ namespace com.superneko.medlay.Editor
             return tangents;
         }
 
+        public NativeArray<float4> GetBoneWeights()
+        {
+            Profiler.BeginSample("MedlayWritableMeshData.GetBoneWeights");
+
+            var boneWeights = new NativeArray<float4>(meshData.vertexCount, allocator);
+
+            Profiler.EndSample();
+
+            return boneWeights;
+        }
+
         void Writeback()
         {
             Profiler.BeginSample("MedlayWritableMeshData.Writeback");
 
             if (vertices.IsCreated)
             {
-                MeshDataAttributeWriter.SetVertices(vertices, meshData);
+                MeshDataAttributeWriter.SetVertices(ref vertices, meshData);
             }
 
             if (normals.IsCreated)
             {
-                MeshDataAttributeWriter.SetNormals(normals, meshData);
+                MeshDataAttributeWriter.SetNormals(ref normals, meshData);
             }
 
             if (tangents.IsCreated)
             {
-                MeshDataAttributeWriter.SetTangents(tangents, meshData);
+                MeshDataAttributeWriter.SetTangents(ref tangents, meshData);
             }
 
             Profiler.EndSample();
