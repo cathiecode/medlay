@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace com.superneko.medlay.Core.Internal.Burst
 {
-    // [BurstCompile]
+    [BurstCompile]
     public static class MeshBakeProcessorBurst
     {
         [BurstCompile]

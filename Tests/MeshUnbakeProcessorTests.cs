@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.VersionControl;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace com.superneko.medlay.Tests
 {
@@ -140,14 +141,37 @@ namespace com.superneko.medlay.Tests
 
             Assert.DoesNotThrow(() =>
             {
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < 1000; i++)
                 {
+                    Profiler.BeginSample("MeshBakeProcessor_SequencialProcess_Iteration");
                     using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
                     processor.BakeMeshToWorld(modifiedMeshData, smr);
                     processor.UnBakeMeshFromWorld(modifiedMeshData, smr);
                     MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
+                    Profiler.EndSample();
                 }
             });
+        }
+
+        [Test]
+        public void MeshBakeProcessor_SameProcessorBakeAndUnbake_ProducesOriginalVertices()
+        {
+            var smr = TestUtils.LoadAvatarSMR("6404d1b6bcec6c44d8dd03187a2c4d49");
+
+            var originalMesh = smr.sharedMesh;
+
+            var modifiedMesh = Object.Instantiate(originalMesh);
+            using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
+
+            var processor = TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>();
+
+            processor.BakeMeshToWorld(modifiedMeshData, smr);
+            processor.UnBakeMeshFromWorld(modifiedMeshData, smr);
+            MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
+
+            Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
+
+            TestUtils.AssertMeshesAreSame(originalMesh, modifiedMesh, allowExactMatch: true);
         }
     }
 }
