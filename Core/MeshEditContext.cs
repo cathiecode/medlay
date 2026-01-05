@@ -43,7 +43,7 @@ namespace com.superneko.medlay.Core
             }
         }
 
-        public static MeshEditContext FromRenderer(Renderer renderer, Mesh writebackMesh = null)
+        public static MeshEditContext FromRenderer(Renderer renderer, Mesh writebackMesh)
         {
             Mesh mesh;
 
@@ -60,13 +60,9 @@ namespace com.superneko.medlay.Core
                     throw new System.Exception("Unsupported renderer type: " + renderer.GetType().Name);
             }
 
-            if (writebackMesh == null)
-            {
-                writebackMesh = Object.Instantiate(mesh);
-            }
-
             var context = new MeshEditContext()
             {
+                writableMeshData = MedlayWritableMeshData.Create(mesh, Allocator.Temp),
                 mesh = writebackMesh,
                 OriginalRenderer = renderer
             };
