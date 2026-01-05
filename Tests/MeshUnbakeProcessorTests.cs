@@ -32,7 +32,7 @@ namespace com.superneko.medlay.Tests
 
             using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
             TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
-            MedlayWritableMeshData.Writeback(writableMeshData, bakedMesh);
+            MedlayWritableMeshData.WritebackAndDispose(writableMeshData, bakedMesh);
             
             Assert.AreEqual(originalMesh.vertexCount, bakedMesh.vertexCount);
 
@@ -72,7 +72,7 @@ namespace com.superneko.medlay.Tests
             using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
             TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(modifiedMeshData, smr);
             TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(modifiedMeshData, smr);
-            MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
+            MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
 
@@ -122,7 +122,7 @@ namespace com.superneko.medlay.Tests
             using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
             TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(modifiedMeshData, meshRenderer);
             TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(modifiedMeshData, meshRenderer);
-            MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
+            MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
 
@@ -145,7 +145,7 @@ namespace com.superneko.medlay.Tests
                     using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
                     processor.BakeMeshToWorld(modifiedMeshData, smr);
                     processor.UnBakeMeshFromWorld(modifiedMeshData, smr);
-                    MedlayWritableMeshData.Writeback(modifiedMeshData, modifiedMesh);
+                    MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
                 }
             });
         }

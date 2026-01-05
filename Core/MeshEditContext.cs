@@ -5,11 +5,44 @@ namespace com.superneko.medlay.Core
 {
     internal class MeshEditContext : IMeshEditContext
     {
-        public MedlayWritableMeshData WritableMeshData { get; set; }
+        MedlayWritableMeshData writableMeshData;
+
+        public MedlayWritableMeshData WritableMeshData
+        {
+            get {
+                if (writableMeshData == null)
+                {
+                    writableMeshData = MedlayWritableMeshData.Create(mesh, Allocator.Temp);
+                }
+
+                return writableMeshData;
+            }
+        }
+
+        Mesh mesh;
+
+        public Mesh Mesh
+        {
+            get
+            {
+                WritebackIfNeed();
+
+                return mesh;
+            }
+        }
 
         public Renderer OriginalRenderer { get; internal set; }
 
-        public static MeshEditContext FromRenderer(Renderer renderer)
+        public void WritebackIfNeed()
+        {
+            if (writableMeshData != null)
+            {
+                MedlayWritableMeshData.WritebackAndDispose(writableMeshData, mesh);
+                writableMeshData = null;
+            }
+        }
+
+        public static MeshEditContext FromRenderer(Renderer renderer, Mesh writebackMesh = null)
         {
             Mesh mesh;
 
@@ -26,9 +59,14 @@ namespace com.superneko.medlay.Core
                     throw new System.Exception("Unsupported renderer type: " + renderer.GetType().Name);
             }
 
+            if (writebackMesh == null)
+            {
+                writebackMesh = Object.Instantiate(mesh);
+            }
+
             var context = new MeshEditContext()
             {
-                WritableMeshData = MedlayWritableMeshData.Create(mesh, Allocator.Temp),
+                mesh = writebackMesh,
                 OriginalRenderer = renderer
             };
 

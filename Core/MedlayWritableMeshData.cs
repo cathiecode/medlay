@@ -158,7 +158,7 @@ namespace com.superneko.medlay.Core
             };
         }
 
-        public static void Writeback(MedlayWritableMeshData writableMeshData, Mesh mesh)
+        public static void WritebackAndDispose(MedlayWritableMeshData writableMeshData, Mesh mesh)
         {
             Profiler.BeginSample("MedlayWritableMeshData.WritebackStatic");
 

@@ -54,7 +54,7 @@ namespace com.superneko.medlay.Tests
             vertices[2] = new float3(0, 1, 1);
 
             // Write back changes
-            MedlayWritableMeshData.Writeback(medlayWritableMeshData, mesh);
+            MedlayWritableMeshData.WritebackAndDispose(medlayWritableMeshData, mesh);
 
             // Verify changes in MeshData
             var updatedVertices = mesh.vertices;
@@ -82,7 +82,7 @@ namespace com.superneko.medlay.Tests
 
             var updatedMesh = Object.Instantiate(smr.sharedMesh);
 
-            MedlayWritableMeshData.Writeback(medlayWritableMeshData, updatedMesh);
+            MedlayWritableMeshData.WritebackAndDispose(medlayWritableMeshData, updatedMesh);
 
             var updatedVertices = updatedMesh.vertices;
 

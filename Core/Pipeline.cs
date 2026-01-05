@@ -2,18 +2,25 @@ using UnityEngine;
 
 namespace com.superneko.medlay.Core
 {
-    public sealed class Pipeline
+    public sealed class MedlayPipeline
     {
         Renderer originalRenderer;
         Mesh deformedMesh;
 
         (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers;
 
-        public Pipeline(Renderer renderer, (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers)
+        public MedlayPipeline(Renderer renderer, (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers, Medlay medlay)
         {
-            this.originalRenderer = renderer;            
+            this.originalRenderer = renderer;
 
-            deformedMesh = new Mesh();
+            var originalMesh = renderer switch
+            {
+                SkinnedMeshRenderer smr => smr.sharedMesh,
+                MeshRenderer mr => mr.GetComponent<MeshFilter>().sharedMesh,
+                _ => throw new System.Exception("Unsupported renderer type: " + renderer.GetType().Name)
+            };
+
+            deformedMesh = Object.Instantiate(originalMesh);
             deformedMesh.name = "MedlayDeformedMesh";
 
             this.meshEditLayers = new (MeshEditLayer, IMeshEditLayerProcessor)[meshEditLayers.Length + 2];
@@ -29,14 +36,14 @@ namespace com.superneko.medlay.Core
 
         public void Process()
         {
-            var context = MeshEditContext.FromRenderer(originalRenderer);
+            var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh);
 
             foreach (var (meshEditLayer, processor) in meshEditLayers)
             {
                 processor.ProcessMeshEditLayer(meshEditLayer, context);
             }
 
-            MedlayWritableMeshData.Writeback(context.WritableMeshData, deformedMesh);
+            context.WritebackIfNeed();
         }
 
         public Mesh GetDeformedMesh()
@@ -45,4 +52,3 @@ namespace com.superneko.medlay.Core
         }
     }
 }
- 

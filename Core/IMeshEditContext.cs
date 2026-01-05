@@ -5,6 +5,7 @@ namespace com.superneko.medlay.Core
     public interface IMeshEditContext
     {
         Renderer OriginalRenderer { get; }
-        MedlayWritableMeshData WritableMeshData { get; set; } // TODO: internal set
+        MedlayWritableMeshData WritableMeshData { get; }
+        Mesh Mesh { get; }
     }
 }

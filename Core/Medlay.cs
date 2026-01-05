@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using UnityEngine;
 
@@ -29,18 +30,24 @@ namespace com.superneko.medlay.Core
             meshEditLayerProcessorFactories[typeof(T)] = processorFactory;
         }
 
-        public Pipeline CreatePipeline(Renderer renderer, MeshEditLayer[] meshEditLayers)
+        public MedlayPipeline CreatePipeline(Renderer renderer, IEnumerable<MeshEditLayer> meshEditLayers)
         {
-            
-            var meshEditLayerProcessors = new IMeshEditLayerProcessor[meshEditLayers.Length];
+            var meshEditLayerProcessors = new List<IMeshEditLayerProcessor>();
 
-            for (int i = 0; i < meshEditLayers.Length; i++)
+            var layers = meshEditLayers.Select(layer =>
             {
-                GetProcessorForMeshEditLayer(meshEditLayers[i], out var processor);
-                meshEditLayerProcessors[i] = processor;
-            }
+                GetProcessorForMeshEditLayer(layer, out var processor);
 
-            return new Pipeline(renderer, meshEditLayers.Zip(meshEditLayerProcessors, (layer, processor) => (layer, processor)).ToArray());
+                if (processor == null)
+                {
+                    // TODO: Softer error handling?
+                    throw new Exception($"Mesh Edit Layer Processor for {layer.GetType()} is not registered.");
+                }
+
+                return (layer, processor);
+            });
+
+            return new MedlayPipeline(renderer, layers.ToArray(), this);
         }
 
         void GetProcessorForMeshEditLayer(MeshEditLayer meshEditLayer, out IMeshEditLayerProcessor processor)
