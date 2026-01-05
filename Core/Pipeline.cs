@@ -1,3 +1,4 @@
+using PlasticGui;
 using UnityEngine;
 
 namespace com.superneko.medlay.Core
@@ -20,18 +21,20 @@ namespace com.superneko.medlay.Core
                 _ => throw new System.Exception("Unsupported renderer type: " + renderer.GetType().Name)
             };
 
+            var meshBakeProcessor = new MeshBakeProcessor();
+
             deformedMesh = Object.Instantiate(originalMesh);
             deformedMesh.name = "MedlayDeformedMesh";
 
             this.meshEditLayers = new (MeshEditLayer, IMeshEditLayerProcessor)[meshEditLayers.Length + 2];
-            this.meshEditLayers[0] = (new BakeMeshEditLayer(), new BakeMeshEditLayerProcessor());
+            this.meshEditLayers[0] = (new BakeMeshEditLayer(), new BakeMeshEditLayerProcessor(meshBakeProcessor));
 
             for (int i = 0; i < meshEditLayers.Length; i++)
             {
                 this.meshEditLayers[i + 1] = meshEditLayers[i];
             }
 
-            this.meshEditLayers[this.meshEditLayers.Length - 1] = (new MeshUnbakeMeshEditLayer(), new MeshUnbakeMeshEditLayerProcessor());
+            this.meshEditLayers[this.meshEditLayers.Length - 1] = (new MeshUnbakeMeshEditLayer(), new MeshUnbakeMeshEditLayerProcessor(meshBakeProcessor));
         }
 
         public void Process()

@@ -4,7 +4,12 @@ namespace com.superneko.medlay.Core
 
     internal class MeshUnbakeMeshEditLayerProcessor : MeshEditLayerProcessor<MeshUnbakeMeshEditLayer>
     {
-        MeshBakeProcessor meshBakeProcessor = new MeshBakeProcessor();
+        MeshBakeProcessor meshBakeProcessor;
+
+        public MeshUnbakeMeshEditLayerProcessor(MeshBakeProcessor meshBakeProcessor)
+        {
+            this.meshBakeProcessor = meshBakeProcessor;
+        }
 
         public override void ProcessMeshEditLayer(MeshUnbakeMeshEditLayer meshEditLayer, IMeshEditContext context)
         {
