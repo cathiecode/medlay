@@ -12,7 +12,8 @@ namespace com.superneko.medlay.Core.Internal.Burst
         [BurstCompile]
         public static void BakeMeshToWorld_VertexProcessing(
             int vertexCount,
-            ref NativeArray<BoneWeight> boneWeights,
+            ref NativeArray<BoneWeight1> allBoneWeights,
+            ref NativeArray<byte> bonesPerVertex,
             ref NativeArray<float4x4> boneMatrices,
             ref NativeArray<float3> vertices,
             ref NativeArray<float3> normals,
@@ -22,39 +23,23 @@ namespace com.superneko.medlay.Core.Internal.Burst
             ref NativeArray<float3> totalDeltaTangents
         )
         {
+            int boneWeightIndex = 0;
             for (int i = 0; i < vertexCount; i++)
             {
-
-                var weight = boneWeights[i];
-
                 float4x4 skinMatrix = Unity.Mathematics.float4x4.zero;
-                if (weight.weight0 > 0)
+
+                if (bonesPerVertex.Length == 0)
                 {
-                    var boneMatrix0 = boneMatrices[weight.boneIndex0];
-                    skinMatrix += boneMatrices[weight.boneIndex0] * weight.weight0;
+                    skinMatrix = boneMatrices[0];
                 }
                 else
                 {
-                    // Processing a static mesh assigned to a SkinnedMeshRenderer
-                    skinMatrix = boneMatrices[0];
-                }
-
-                if (weight.weight1 > 0)
-                {
-                    var boneMatrix1 = boneMatrices[weight.boneIndex1];
-                    skinMatrix += boneMatrices[weight.boneIndex1] * weight.weight1;
-                }
-
-                if (weight.weight2 > 0)
-                {
-                    var boneMatrix2 = boneMatrices[weight.boneIndex2];
-                    skinMatrix += boneMatrices[weight.boneIndex2] * weight.weight2;
-                }
-
-                if (weight.weight3 > 0)
-                {
-                    var boneMatrix3 = boneMatrices[weight.boneIndex3];
-                    skinMatrix += boneMatrices[weight.boneIndex3] * weight.weight3;
+                    for (int j = 0; j < bonesPerVertex[i]; j++)
+                    {
+                        var bw = allBoneWeights[boneWeightIndex++];
+                        var boneMatrix = bw.boneIndex;
+                        skinMatrix += boneMatrices[boneMatrix] * bw.weight;
+                    }
                 }
 
                 vertices[i] = math.transform(skinMatrix, vertices[i] + totalDeltaVertices[i]);
@@ -76,7 +61,8 @@ namespace com.superneko.medlay.Core.Internal.Burst
         [BurstCompile]
         public static void UnbakeMeshToLocal_VertexProcessing(
             int vertexCount,
-            ref NativeArray<BoneWeight> boneWeights,
+            ref NativeArray<BoneWeight1> allBoneWeights,
+            ref NativeArray<byte> bonesPerVertex,
             ref NativeArray<float4x4> boneMatrices,
             ref NativeArray<float3> vertices,
             ref NativeArray<float3> normals,
@@ -95,6 +81,7 @@ namespace com.superneko.medlay.Core.Internal.Burst
             var hasNormal = normals.Length > 0;
             var hasTangent = tangents.Length > 0;
 
+            int boneWeightIndex = 0;
             for (int i = 0; i < vertexCount; i++)
             {
                 bool verticeChanged = !all(referenceBakedVertices[i] == vertices[i]);
@@ -118,40 +105,24 @@ namespace com.superneko.medlay.Core.Internal.Burst
 
                 if (!verticeChanged && !normalChanged && !tangentChanged)
                 {
+                    boneWeightIndex += bonesPerVertex[i];
                     continue;
                 }
 
-                var weight = boneWeights[i];
-
                 float4x4 skinMatrixSum = Unity.Mathematics.float4x4.zero;
 
-                if (weight.weight0 > 0)
+                if (bonesPerVertex.Length == 0)
                 {
-                    var boneMatrix0 = boneMatrices[weight.boneIndex0];
-                    skinMatrixSum += boneMatrix0 * weight.weight0;
+                    skinMatrixSum = boneMatrices[0];
                 }
                 else
                 {
-                    // Processing a static mesh assigned to a SkinnedMeshRenderer
-                    skinMatrixSum = boneMatrices[0];
-                }
-
-                if (weight.weight1 > 0)
-                {
-                    var boneMatrix1 = boneMatrices[weight.boneIndex1];
-                    skinMatrixSum += boneMatrix1 * weight.weight1;
-                }
-
-                if (weight.weight2 > 0)
-                {
-                    var boneMatrix2 = boneMatrices[weight.boneIndex2];
-                    skinMatrixSum += boneMatrix2 * weight.weight2;
-                }
-
-                if (weight.weight3 > 0)
-                {
-                    var boneMatrix3 = boneMatrices[weight.boneIndex3];
-                    skinMatrixSum += boneMatrix3 * weight.weight3;
+                    for (int j = 0; j < bonesPerVertex[i]; j++)
+                    {
+                        var bw = allBoneWeights[boneWeightIndex++];
+                        var boneMatrix = bw.boneIndex;
+                        skinMatrixSum += boneMatrices[boneMatrix] * bw.weight;
+                    }
                 }
 
                 float4x4 invSkinMatrix = math.inverse(skinMatrixSum);

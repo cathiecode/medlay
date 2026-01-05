@@ -47,8 +47,6 @@ namespace com.superneko.medlay.Core
         int vertexCount = 0;
 
         List<Matrix4x4> bindPoses = new List<Matrix4x4>();
-        List<BoneWeight> tmpBoneWeights = new List<BoneWeight>();
-        NativeArray<BoneWeight> boneWeights;
         NativeArray<float4x4> boneMatrices;
 
         NativeArray<float3> totalDeltaVertices;
@@ -73,7 +71,6 @@ namespace com.superneko.medlay.Core
 
         ~MeshBakeProcessor()
         {
-            if (boneWeights.IsCreated) boneWeights.Dispose();
             if (boneMatrices.IsCreated) boneMatrices.Dispose();
             if (totalDeltaVertices.IsCreated) totalDeltaVertices.Dispose();
             if (totalDeltaNormals.IsCreated) totalDeltaNormals.Dispose();
@@ -103,26 +100,6 @@ namespace com.superneko.medlay.Core
                 }
 
                 meshData.BaseMesh.GetBindposes(bindPoses);
-            }
-            Profiler.EndSample();
-
-            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneWeights");
-            if (boneWeights.Length != vertexCount)
-            {
-                Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateBoneWeights");
-                if (boneWeights.IsCreated) boneWeights.Dispose();
-                boneWeights = new NativeArray<BoneWeight>(vertexCount, Allocator.Persistent);
-                tmpBoneWeights = new List<BoneWeight>(new BoneWeight[vertexCount]);
-                Profiler.EndSample();
-            }
-
-            Profiler.EndSample();
-
-            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_GetBoneWeights");
-            meshData.BaseMesh.GetBoneWeights(tmpBoneWeights);
-            for (int i = 0; i < tmpBoneWeights.Count; i++)
-            {
-                boneWeights[i] = tmpBoneWeights[i];
             }
             Profiler.EndSample();
 
@@ -224,11 +201,15 @@ namespace com.superneko.medlay.Core
             referenceUnbakedTangents.CopyFrom(tangents);
             Profiler.EndSample();
 
+            var allBoneWeights = meshData.GetAllBoneWeightsReadOnly();
+            var bonesPerVertex = meshData.GetBonesPerVertexReadOnly();
+
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_VertexProcessing");
 
             MeshBakeProcessorBurst.BakeMeshToWorld_VertexProcessing(
                 vertexCount,
-                ref boneWeights,
+                ref allBoneWeights,
+                ref bonesPerVertex,
                 ref boneMatrices,
                 ref vertices,
                 ref normals,
@@ -272,11 +253,15 @@ namespace com.superneko.medlay.Core
 
             Profiler.EndSample();
 
+            var allBoneWeights = meshData.GetAllBoneWeightsReadOnly();
+            var bonesPerVertex = meshData.GetBonesPerVertexReadOnly();
+
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_VertexProcessing");
 
             MeshBakeProcessorBurst.UnbakeMeshToLocal_VertexProcessing(
                 vertexCount,
-                ref boneWeights,
+                ref allBoneWeights,
+                ref bonesPerVertex,
                 ref boneMatrices,
                 ref vertices,
                 ref normals,
