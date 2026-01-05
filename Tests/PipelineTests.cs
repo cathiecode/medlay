@@ -61,7 +61,7 @@ namespace com.superneko.medlay.Tests
 
             var deformedMesh = pipeline.GetDeformedMesh();
 
-            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh);
+            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
         }
 
         [Test]
@@ -107,7 +107,7 @@ namespace com.superneko.medlay.Tests
 
             var deformedMesh = pipeline.GetDeformedMesh();
 
-            TestUtils.AssertMeshesAreSame(smr.sharedMesh, deformedMesh);
+            TestUtils.AssertMeshesAreSame(smr.sharedMesh, deformedMesh, allowExactMatch: true);
             TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
         }
 
@@ -127,7 +127,7 @@ namespace com.superneko.medlay.Tests
 
             var deformedMesh = pipeline.GetDeformedMesh();
 
-            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh);
+            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
             TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
         }
     }

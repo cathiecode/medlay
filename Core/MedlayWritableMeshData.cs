@@ -17,6 +17,9 @@ namespace com.superneko.medlay.Core
         NativeArray<float3> vertices;
         NativeArray<float3> normals;
         NativeArray<float4> tangents;
+        NativeArray<BoneWeight1> allBoneWeights;
+        NativeArray<int> boneWeightStartIndexPerVertex;
+        NativeArray<float4x4> bindposes;
 
         Allocator allocator;
 
@@ -24,7 +27,7 @@ namespace com.superneko.medlay.Core
 
         public int vertexCount => meshData.vertexCount;
         public int bindposeCount => baseMesh.bindposes.Length;
-        
+
         /// <summary>
         /// The original Mesh this MeshData is based on.
         /// Modifications to the BaseMesh will be REVERTED on Writeback.
@@ -91,15 +94,70 @@ namespace com.superneko.medlay.Core
             return tangents;
         }
 
-        public NativeArray<float4> GetBoneWeights()
+        public NativeArray<BoneWeight1> GetAllBoneWeightsReadOnly()
         {
+            if (allBoneWeights.IsCreated)
+            {
+                return allBoneWeights;
+            }
+
             Profiler.BeginSample("MedlayWritableMeshData.GetBoneWeights");
 
-            var boneWeights = new NativeArray<float4>(meshData.vertexCount, allocator);
+            allBoneWeights = baseMesh.GetAllBoneWeights(); // TODO: Freeing?
 
             Profiler.EndSample();
 
-            return boneWeights;
+            return allBoneWeights;
+        }
+
+        public NativeArray<byte> GetBonesPerVertexReadOnly()
+        {
+            return baseMesh.GetBonesPerVertex();
+        }
+
+        public NativeArray<int> GetBoneWeightStartIndexPerVertexReadOnly()
+        {
+            if (boneWeightStartIndexPerVertex.IsCreated)
+            {
+                return boneWeightStartIndexPerVertex;
+            }
+
+            Profiler.BeginSample("MedlayWritableMeshData.GetBoneWeightStartIndexPerVertex");
+
+            var bonesPerVertex = GetBonesPerVertexReadOnly();
+
+            boneWeightStartIndexPerVertex = new NativeArray<int>(bonesPerVertex.Length, allocator);
+
+            int i = 0;
+
+            for (int v = 0; v < bonesPerVertex.Length; v++)
+            {
+                boneWeightStartIndexPerVertex[v] = i;
+
+                i += bonesPerVertex[v];
+            }
+
+            Profiler.EndSample();
+
+            return boneWeightStartIndexPerVertex;
+        }
+
+        public NativeArray<float4x4> GetBindposesReadOnly()
+        {
+            if (bindposes.IsCreated)
+            {
+                return bindposes;
+            }
+
+            Profiler.BeginSample("MedlayWritableMeshData.GetBindposesReadOnly");
+
+            bindposes = new NativeArray<float4x4>(baseMesh.bindposes.Length, allocator);
+
+            bindposes = MeshDataUtils.Reinterpret(baseMesh.GetBindposes());
+
+            Profiler.EndSample();
+
+            return bindposes;
         }
 
         void Writeback()
@@ -139,6 +197,21 @@ namespace com.superneko.medlay.Core
             if (tangents.IsCreated)
             {
                 tangents.Dispose();
+            }
+
+            if (allBoneWeights.IsCreated)
+            {
+                allBoneWeights.Dispose(); // FIXME: Is it really safe?
+            }
+
+            if (boneWeightStartIndexPerVertex.IsCreated)
+            {
+                boneWeightStartIndexPerVertex.Dispose();
+            }
+
+            if (bindposes.IsCreated)
+            {
+                bindposes.Dispose(); // FIXME: Is it really safe?
             }
         }
 

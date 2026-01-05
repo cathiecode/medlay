@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace com.superneko.medlay.Core.Internal.Burst
 {
-    [BurstCompile]
+    // [BurstCompile]
     public static class MeshBakeProcessorBurst
     {
         [BurstCompile]
@@ -83,11 +83,44 @@ namespace com.superneko.medlay.Core.Internal.Burst
             ref NativeArray<float4> tangents,
             ref NativeArray<float3> totalDeltaVertices,
             ref NativeArray<float3> totalDeltaNormals,
-            ref NativeArray<float3> totalDeltaTangents
+            ref NativeArray<float3> totalDeltaTangents,
+            ref NativeArray<float3> referenceBakedVertices,
+            ref NativeArray<float3> referenceBakedNormals,
+            ref NativeArray<float4> referenceBakedTangents,
+            ref NativeArray<float3> referenceUnbakedVertices,
+            ref NativeArray<float3> referenceUnbakedNormals,
+            ref NativeArray<float4> referenceUnbakedTangents
         )
         {
+            var hasNormal = normals.Length > 0;
+            var hasTangent = tangents.Length > 0;
+
             for (int i = 0; i < vertexCount; i++)
             {
+                bool verticeChanged = !all(referenceBakedVertices[i] == vertices[i]);
+                bool normalChanged = hasNormal && !all(referenceBakedNormals[i] == normals[i]);
+                bool tangentChanged = hasTangent && !all(referenceBakedTangents[i] == tangents[i]);
+
+                if (!verticeChanged)
+                {
+                    vertices[i] = referenceUnbakedVertices[i];
+                }
+
+                if (!normalChanged && hasNormal)
+                {
+                    normals[i] = referenceUnbakedNormals[i];
+                }
+
+                if (!tangentChanged && hasTangent)
+                {
+                    tangents[i] = referenceUnbakedTangents[i];
+                }
+
+                if (!verticeChanged && !normalChanged && !tangentChanged)
+                {
+                    continue;
+                }
+
                 var weight = boneWeights[i];
 
                 float4x4 skinMatrixSum = Unity.Mathematics.float4x4.zero;
@@ -123,21 +156,14 @@ namespace com.superneko.medlay.Core.Internal.Burst
 
                 float4x4 invSkinMatrix = math.inverse(skinMatrixSum);
 
-                float3 unskinnedPos = math.transform(invSkinMatrix, vertices[i]);
+                if (verticeChanged) vertices[i] = transform(invSkinMatrix, vertices[i]) - totalDeltaVertices[i];
 
-                vertices[i] = unskinnedPos - totalDeltaVertices[i];
+                if (hasNormal && normalChanged) normals[i] = normalize(rotate(invSkinMatrix, normals[i]) - totalDeltaNormals[i]);
 
-                if (normals.Length > 0)
+                if (hasTangent && tangentChanged)
                 {
-                    float3 unskinnedNormal = math.rotate(invSkinMatrix, normals[i]);
-                    normals[i] = normalize(unskinnedNormal - totalDeltaNormals[i]);
-                }
-
-                if (tangents.Length > 0)
-                {
-                    float4 t = tangents[i];
-                    float3 unskinnedTangent = math.rotate(invSkinMatrix, new float3(t.x, t.y, t.z));
-                    float3 finalTangent = normalize(unskinnedTangent - totalDeltaTangents[i]);
+                    var t = tangents[i];
+                    float3 finalTangent = normalize(rotate(invSkinMatrix, t.xyz) - totalDeltaTangents[i]);
                     tangents[i] = new float4(finalTangent.x, finalTangent.y, finalTangent.z, t.w);
                 }
             }

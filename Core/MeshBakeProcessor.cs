@@ -7,6 +7,7 @@ using Unity.Mathematics;
 
 namespace com.superneko.medlay.Core
 {
+    using com.superneko.medlay.Core.Internal.Unsafe;
     using Internal.Burst;
     /// <summary>
     /// Bakes and unbakes skinned meshes to and from world space.
@@ -54,6 +55,13 @@ namespace com.superneko.medlay.Core
         NativeArray<float3> totalDeltaNormals;
         NativeArray<float3> totalDeltaTangents;
 
+        NativeArray<float3> referenceBakedVertices;
+        NativeArray<float3> referenceBakedNormals;
+        NativeArray<float4> referenceBakedTangents;
+        NativeArray<float3> referenceUnbakedVertices;
+        NativeArray<float3> referenceUnbakedNormals;
+        NativeArray<float4> referenceUnbakedTangents;
+
         DisposableCache<(int, int), BlendShapeContainer> blendShapeCache = new DisposableCache<(int, int), BlendShapeContainer>();
 
         float[] blendShapeWeights;
@@ -70,6 +78,9 @@ namespace com.superneko.medlay.Core
             if (totalDeltaVertices.IsCreated) totalDeltaVertices.Dispose();
             if (totalDeltaNormals.IsCreated) totalDeltaNormals.Dispose();
             if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
+            if (referenceBakedVertices.IsCreated) referenceBakedVertices.Dispose();
+            if (referenceBakedNormals.IsCreated) referenceBakedNormals.Dispose();
+            if (referenceBakedTangents.IsCreated) referenceBakedTangents.Dispose();
             blendShapeCache.Clear();
         }
 
@@ -125,8 +136,7 @@ namespace com.superneko.medlay.Core
                     if (bindPoses.Count == 1)
                     {
                         // Static mesh assigned to SMR
-                        if (boneMatrices.IsCreated) boneMatrices.Dispose();
-                        boneMatrices = new NativeArray<float4x4>(1, Allocator.Persistent);
+                        ReallocateIfNeeded(ref boneMatrices, 1);
                         boneMatrices[0] = renderer.transform.localToWorldMatrix;
                     }
                     else
@@ -138,13 +148,7 @@ namespace com.superneko.medlay.Core
                 }
                 else
                 {
-                    if (smr.bones.Length != boneMatrices.Length)
-                    {
-                        Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateBoneMatrices");
-                        if (boneMatrices.IsCreated) boneMatrices.Dispose();
-                        boneMatrices = new NativeArray<float4x4>(smr.bones.Length, Allocator.Persistent);
-                        Profiler.EndSample();
-                    }
+                    ReallocateIfNeeded(ref boneMatrices, smr.bones.Length);
 
                     var bones = smr.bones; // Allocation
 
@@ -164,9 +168,7 @@ namespace com.superneko.medlay.Core
             }
             else
             {
-                if (boneMatrices.IsCreated) boneMatrices.Dispose();
-
-                boneMatrices = new NativeArray<float4x4>(bindPoses.Count, Allocator.Persistent);
+                ReallocateIfNeeded(ref boneMatrices, bindPoses.Count);
 
                 for (int i = 0; i < boneMatrices.Length; i++)
                 {
@@ -176,21 +178,18 @@ namespace com.superneko.medlay.Core
             Profiler.EndSample();
 
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateDeltaArrays");
-            if (totalDeltaVertices.Length != vertexCount)
-            {
-                if (totalDeltaVertices.IsCreated) totalDeltaVertices.Dispose();
-                totalDeltaVertices = new NativeArray<float3>(vertexCount, Allocator.Persistent);
-            }
-            if (totalDeltaNormals.Length != vertexCount)
-            {
-                if (totalDeltaNormals.IsCreated) totalDeltaNormals.Dispose();
-                totalDeltaNormals = new NativeArray<float3>(vertexCount, Allocator.Persistent);
-            }
-            if (totalDeltaTangents.Length != vertexCount)
-            {
-                if (totalDeltaTangents.IsCreated) totalDeltaTangents.Dispose();
-                totalDeltaTangents = new NativeArray<float3>(vertexCount, Allocator.Persistent);
-            }
+            ReallocateIfNeeded(ref totalDeltaVertices, vertexCount);
+            ReallocateIfNeeded(ref totalDeltaNormals, vertexCount);
+            ReallocateIfNeeded(ref totalDeltaTangents, vertexCount);
+            Profiler.EndSample();
+
+            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateReferenceArrays");
+            ReallocateIfNeeded(ref referenceBakedVertices, vertexCount);
+            ReallocateIfNeeded(ref referenceBakedNormals, vertexCount);
+            ReallocateIfNeeded(ref referenceBakedTangents, vertexCount);
+            ReallocateIfNeeded(ref referenceUnbakedVertices, vertexCount);
+            ReallocateIfNeeded(ref referenceUnbakedNormals, vertexCount);
+            ReallocateIfNeeded(ref referenceUnbakedTangents, vertexCount);
             Profiler.EndSample();
 
             Profiler.EndSample();
@@ -219,6 +218,12 @@ namespace com.superneko.medlay.Core
 
             Profiler.EndSample();
 
+            Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_StoreUnbakedReference");
+            referenceUnbakedVertices.CopyFrom(vertices);
+            referenceUnbakedNormals.CopyFrom(normals);
+            referenceUnbakedTangents.CopyFrom(tangents);
+            Profiler.EndSample();
+
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_VertexProcessing");
 
             MeshBakeProcessorBurst.BakeMeshToWorld_VertexProcessing(
@@ -233,6 +238,12 @@ namespace com.superneko.medlay.Core
                 ref totalDeltaTangents
             );
 
+            Profiler.EndSample();
+
+            Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_StoreBakedReference");
+            referenceBakedVertices.CopyFrom(vertices);
+            referenceBakedNormals.CopyFrom(normals);
+            referenceBakedTangents.CopyFrom(tangents);
             Profiler.EndSample();
 
             Profiler.EndSample();
@@ -272,7 +283,13 @@ namespace com.superneko.medlay.Core
                 ref tangents,
                 ref totalDeltaVertices,
                 ref totalDeltaNormals,
-                ref totalDeltaTangents
+                ref totalDeltaTangents,
+                ref referenceBakedVertices,
+                ref referenceBakedNormals,
+                ref referenceBakedTangents,
+                ref referenceUnbakedVertices,
+                ref referenceUnbakedNormals,
+                ref referenceUnbakedTangents
             );
 
             Profiler.EndSample();
@@ -378,6 +395,15 @@ namespace com.superneko.medlay.Core
             }
 
             return changed;
+        }
+
+        static void ReallocateIfNeeded<T>(ref NativeArray<T> array, int requiredLength) where T : struct
+        {
+            if (array.Length != requiredLength || !array.IsCreated)
+            {
+                if (array.IsCreated) array.Dispose();
+                array = new NativeArray<T>(requiredLength, Allocator.Persistent);
+            }
         }
     }
 }
