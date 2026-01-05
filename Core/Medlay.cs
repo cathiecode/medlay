@@ -50,7 +50,7 @@ namespace com.superneko.medlay.Core
             return new MedlayPipeline(renderer, layers.ToArray(), this);
         }
 
-        void GetProcessorForMeshEditLayer(MeshEditLayer meshEditLayer, out IMeshEditLayerProcessor processor)
+        internal void GetProcessorForMeshEditLayer(MeshEditLayer meshEditLayer, out IMeshEditLayerProcessor processor)
         {
             var meshEditLayerType = meshEditLayer.GetType();
 

@@ -2,6 +2,7 @@ using NUnit.Framework;
 
 namespace com.superneko.medlay.Tests
 {
+    using com.superneko.medlay.Runtime;
     using Core;
     using UnityEngine;
 
@@ -19,6 +20,27 @@ namespace com.superneko.medlay.Tests
             public override void ProcessMeshEditLayer(MockShapeLayer meshEditLayer, IMeshEditContext context)
             {
                 called = true;
+            }
+        }
+
+        class ShiftShapeLayer : MeshEditLayer
+        {
+            public Vector3 shift;
+        }
+
+        class ShiftShapeLayerProcessor : MeshEditLayerProcessor<ShiftShapeLayer>
+        {
+            public override void ProcessMeshEditLayer(ShiftShapeLayer meshEditLayer, IMeshEditContext context)
+            {
+                var mesh = context.Mesh;
+                var vertices = mesh.vertices;
+
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    vertices[i] += meshEditLayer.shift;
+                }
+
+                mesh.vertices = vertices;
             }
         }
 
@@ -129,6 +151,43 @@ namespace com.superneko.medlay.Tests
 
             TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
             TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
+        }
+
+        [Test]
+        public void ProcessPipeline_WithShiftLayer_ShiftsVertices()
+        {
+            var medlay = new Medlay();
+
+            medlay.RegisterMeshEditLayerProcessor<ShiftShapeLayer>(() => new ShiftShapeLayerProcessor());
+
+            var go = TestUtils.LoadAssetByGUID<GameObject>("b2d84739974699041a872a145db9c46b");
+
+            var mr = go.GetComponent<MeshRenderer>();
+
+            var shift = new Vector3(1f, 2f, 3f);
+            var shiftLayer = new ShiftShapeLayer()
+            {
+                shift = shift
+            };
+
+            var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[] { shiftLayer, new DebugMeshEditLayer() });
+
+            pipeline.Process();
+
+            var deformedMesh = pipeline.GetDeformedMesh();
+
+            var originalVertices = mr.GetComponent<MeshFilter>().sharedMesh.vertices;
+            var deformedVertices = deformedMesh.vertices;
+
+            Assert.AreEqual(originalVertices.Length, deformedVertices.Length);
+
+            for (int i = 0; i < originalVertices.Length; i++)
+            {
+                var expected = originalVertices[i] + shift;
+                var actual = deformedVertices[i];
+
+                Assert.AreEqual(expected, actual);
+            }
         }
     }
 }

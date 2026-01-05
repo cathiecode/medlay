@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using PlasticGui;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 namespace com.superneko.medlay.Core
 {
@@ -9,6 +12,11 @@ namespace com.superneko.medlay.Core
         Mesh deformedMesh;
 
         (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers;
+        BakeMeshEditLayer bakeLayer = new BakeMeshEditLayer();
+        MeshUnbakeMeshEditLayer unbakeLayer = new MeshUnbakeMeshEditLayer();
+        BakeMeshEditLayerProcessor bakeProcessor;
+        MeshUnbakeMeshEditLayerProcessor unbakeProcessor;
+        Medlay registry;
 
         public MedlayPipeline(Renderer renderer, (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers, Medlay medlay)
         {
@@ -26,25 +34,26 @@ namespace com.superneko.medlay.Core
             deformedMesh = Object.Instantiate(originalMesh);
             deformedMesh.name = "MedlayDeformedMesh";
 
-            this.meshEditLayers = new (MeshEditLayer, IMeshEditLayerProcessor)[meshEditLayers.Length + 2];
-            this.meshEditLayers[0] = (new BakeMeshEditLayer(), new BakeMeshEditLayerProcessor(meshBakeProcessor));
+            this.meshEditLayers = meshEditLayers;
 
-            for (int i = 0; i < meshEditLayers.Length; i++)
-            {
-                this.meshEditLayers[i + 1] = meshEditLayers[i];
-            }
+            this.bakeProcessor = new BakeMeshEditLayerProcessor(meshBakeProcessor);
+            this.unbakeProcessor = new MeshUnbakeMeshEditLayerProcessor(meshBakeProcessor);
 
-            this.meshEditLayers[this.meshEditLayers.Length - 1] = (new MeshUnbakeMeshEditLayer(), new MeshUnbakeMeshEditLayerProcessor(meshBakeProcessor));
+            this.registry = medlay;
         }
 
         public void Process()
         {
             var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh);
 
+            bakeProcessor.ProcessMeshEditLayer(bakeLayer, context);
+
             foreach (var (meshEditLayer, processor) in meshEditLayers)
             {
                 processor.ProcessMeshEditLayer(meshEditLayer, context);
             }
+
+            unbakeProcessor.ProcessMeshEditLayer(unbakeLayer, context);
 
             context.WritebackIfNeed();
         }
@@ -52,6 +61,36 @@ namespace com.superneko.medlay.Core
         public Mesh GetDeformedMesh()
         {
             return deformedMesh;
+        }
+
+        public void Refresh(ICollection<MeshEditLayer> newMeshEditLayers)
+        {
+            (MeshEditLayer, IMeshEditLayerProcessor)[] updatedLayers = meshEditLayers;
+
+            if (updatedLayers.Length != newMeshEditLayers.Count)
+            {
+                updatedLayers = new (MeshEditLayer, IMeshEditLayerProcessor)[newMeshEditLayers.Count];
+            }
+
+            for (int i = 0; i < updatedLayers.Length; i++)
+            {
+                var newLayer = newMeshEditLayers.ElementAt(i);
+                var (oldLayer, oldProcessor) = updatedLayers[i];
+
+                if (oldLayer == newLayer)
+                {
+                    updatedLayers[i] = (newLayer, oldProcessor);
+                    // Processor reusability query
+                }
+                else
+                {
+                    registry.GetProcessorForMeshEditLayer(newLayer, out var processor);
+
+                    updatedLayers[i] = (newLayer, processor);
+                }
+            }
+
+            meshEditLayers = updatedLayers;
         }
     }
 }
