@@ -105,7 +105,10 @@ namespace com.superneko.medlay.Core.Internal.Burst
 
                 if (!verticeChanged && !normalChanged && !tangentChanged)
                 {
-                    boneWeightIndex += bonesPerVertex[i];
+                    if (bonesPerVertex.Length > 0) {
+                        boneWeightIndex += bonesPerVertex[i];
+                    }
+
                     continue;
                 }
 
