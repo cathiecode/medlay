@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using PlasticGui;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
+using UnityEngine.Profiling;
 
 namespace com.superneko.medlay.Core
 {
@@ -44,18 +43,24 @@ namespace com.superneko.medlay.Core
 
         public void Process()
         {
+            Profiler.BeginSample("MedlayPipeline.Process");
             var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh);
 
             bakeProcessor.ProcessMeshEditLayer(bakeLayer, context);
 
             foreach (var (meshEditLayer, processor) in meshEditLayers)
             {
+                Profiler.BeginSample("MedlayPipeline.Process - " + meshEditLayer.GetType().Name);
+
                 processor.ProcessMeshEditLayer(meshEditLayer, context);
+
+                Profiler.EndSample();
             }
 
             unbakeProcessor.ProcessMeshEditLayer(unbakeLayer, context);
 
             context.WritebackIfNeed();
+            Profiler.EndSample();
         }
 
         public Mesh GetDeformedMesh()
