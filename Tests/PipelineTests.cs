@@ -158,9 +158,11 @@ namespace com.superneko.medlay.Tests
         {
             var medlay = new Medlay();
 
+            medlay.RegisterMeshEditLayerProcessor<DebugMeshEditLayer>(() => new DebugMeshEditLayerProcessor());
+
             medlay.RegisterMeshEditLayerProcessor<ShiftShapeLayer>(() => new ShiftShapeLayerProcessor());
 
-            var go = TestUtils.LoadAssetByGUID<GameObject>("b2d84739974699041a872a145db9c46b");
+            var go = TestUtils.LoadAssetByGUID<GameObject>("ae1478b69f7c8c3489353901b44b7593");
 
             var mr = go.GetComponent<MeshRenderer>();
 
