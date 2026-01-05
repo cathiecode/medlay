@@ -102,7 +102,9 @@ namespace com.superneko.medlay.Core
             {
                 var smr = renderer as SkinnedMeshRenderer;
 
-                if (smr.bones.Length != bindPoses.Length)
+                var bones = smr.bones;
+
+                if (bones.Length != bindPoses.Length)
                 {
                     if (bindPoses.Length == 1)
                     {
@@ -119,9 +121,7 @@ namespace com.superneko.medlay.Core
                 }
                 else
                 {
-                    ReallocateIfNeeded(ref boneMatrices, smr.bones.Length);
-
-                    var bones = smr.bones; // Allocation
+                    ReallocateIfNeeded(ref boneMatrices, bones.Length);
 
                     for (int i = 0; i < bones.Length; i++)
                     {
