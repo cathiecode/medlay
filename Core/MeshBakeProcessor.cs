@@ -46,7 +46,6 @@ namespace com.superneko.medlay.Core
 
         int vertexCount = 0;
 
-        List<Matrix4x4> bindPoses = new List<Matrix4x4>();
         NativeArray<float4x4> boneMatrices;
 
         NativeArray<float3> totalDeltaVertices;
@@ -87,30 +86,25 @@ namespace com.superneko.medlay.Core
 
             vertexCount = meshData.vertexCount;
 
-            Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BindPoses");
+            NativeArray<float4x4> bindPoses;
+
             if (meshData.BaseMesh.bindposeCount == 0)
             {
-                bindPoses = new List<Matrix4x4>(new Matrix4x4[] { Matrix4x4.identity });
-            }
-            else
+                bindPoses = new NativeArray<float4x4>(1, Allocator.Temp);
+                bindPoses[0] = float4x4.identity;
+            } else
             {
-                if (bindPoses.Count != meshData.BaseMesh.bindposeCount)
-                {
-                    bindPoses = new List<Matrix4x4>(new Matrix4x4[meshData.BaseMesh.bindposeCount]);
-                }
-
-                meshData.BaseMesh.GetBindposes(bindPoses);
+                bindPoses = meshData.GetBindposesReadOnly();
             }
-            Profiler.EndSample();
 
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneMatrices");
             if (renderer is SkinnedMeshRenderer)
             {
                 var smr = renderer as SkinnedMeshRenderer;
 
-                if (smr.bones.Length != bindPoses.Count)
+                if (smr.bones.Length != bindPoses.Length)
                 {
-                    if (bindPoses.Count == 1)
+                    if (bindPoses.Length == 1)
                     {
                         // Static mesh assigned to SMR
                         ReallocateIfNeeded(ref boneMatrices, 1);
@@ -134,24 +128,26 @@ namespace com.superneko.medlay.Core
                         var bone = bones[i];
                         if (bone == null)
                         {
-                            boneMatrices[i] = Matrix4x4.identity;
+                            boneMatrices[i] = float4x4.identity;
                         }
                         else
                         {
-                            boneMatrices[i] = bones[i].localToWorldMatrix * bindPoses[i];
+                            // NOTE: float4x4 * is CROSS PRODUCT.
+                            boneMatrices[i] = bones[i].localToWorldMatrix * (Matrix4x4)bindPoses[i];
                         }
                     }
                 }
             }
             else
             {
-                ReallocateIfNeeded(ref boneMatrices, bindPoses.Count);
+                ReallocateIfNeeded(ref boneMatrices, bindPoses.Length);
 
                 for (int i = 0; i < boneMatrices.Length; i++)
                 {
                     boneMatrices[i] = renderer.transform.localToWorldMatrix;
                 }
             }
+            bindPoses.Dispose();
             Profiler.EndSample();
 
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateDeltaArrays");

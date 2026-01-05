@@ -17,9 +17,7 @@ namespace com.superneko.medlay.Core
         NativeArray<float3> vertices;
         NativeArray<float3> normals;
         NativeArray<float4> tangents;
-        NativeArray<BoneWeight1> allBoneWeights;
         NativeArray<int> boneWeightStartIndexPerVertex;
-        NativeArray<float4x4> bindposes;
 
         Allocator allocator;
 
@@ -96,18 +94,7 @@ namespace com.superneko.medlay.Core
 
         public NativeArray<BoneWeight1> GetAllBoneWeightsReadOnly()
         {
-            if (allBoneWeights.IsCreated)
-            {
-                return allBoneWeights;
-            }
-
-            Profiler.BeginSample("MedlayWritableMeshData.GetBoneWeights");
-
-            allBoneWeights = baseMesh.GetAllBoneWeights(); // TODO: Freeing?
-
-            Profiler.EndSample();
-
-            return allBoneWeights;
+            return baseMesh.GetAllBoneWeights();
         }
 
         public NativeArray<byte> GetBonesPerVertexReadOnly()
@@ -144,20 +131,7 @@ namespace com.superneko.medlay.Core
 
         public NativeArray<float4x4> GetBindposesReadOnly()
         {
-            if (bindposes.IsCreated)
-            {
-                return bindposes;
-            }
-
-            Profiler.BeginSample("MedlayWritableMeshData.GetBindposesReadOnly");
-
-            bindposes = new NativeArray<float4x4>(baseMesh.bindposes.Length, allocator);
-
-            bindposes = MeshDataUtils.Reinterpret(baseMesh.GetBindposes());
-
-            Profiler.EndSample();
-
-            return bindposes;
+            return MeshDataUtils.Reinterpret(baseMesh.GetBindposes());
         }
 
         void Writeback()
@@ -199,19 +173,9 @@ namespace com.superneko.medlay.Core
                 tangents.Dispose();
             }
 
-            if (allBoneWeights.IsCreated)
-            {
-                allBoneWeights.Dispose(); // FIXME: Is it really safe?
-            }
-
             if (boneWeightStartIndexPerVertex.IsCreated)
             {
                 boneWeightStartIndexPerVertex.Dispose();
-            }
-
-            if (bindposes.IsCreated)
-            {
-                bindposes.Dispose(); // FIXME: Is it really safe?
             }
         }
 
