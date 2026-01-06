@@ -14,9 +14,9 @@ namespace com.superneko.medlay.Core
         Mesh baseMesh;
         internal MeshDataArray meshDataArray;
 
-        NativeArray<float3> vertices;
-        NativeArray<float3> normals;
-        NativeArray<float4> tangents;
+        NativeArray<Vector3> vertices;
+        NativeArray<Vector3> normals;
+        NativeArray<Vector4> tangents;
         NativeArray<int> boneWeightStartIndexPerVertex;
 
         Allocator allocator;
@@ -38,7 +38,7 @@ namespace com.superneko.medlay.Core
         /// </summary>
         public MeshData MeshData => meshData;
 
-        public NativeArray<float3> GetVertices()
+        public NativeArray<Vector3> GetVertices()
         {
             if (vertices.IsCreated)
             {
@@ -47,16 +47,16 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MedlayWritableMeshData.GetVertices");
 
-            vertices = new NativeArray<float3>(meshData.vertexCount, allocator);
+            vertices = new NativeArray<Vector3>(meshData.vertexCount, allocator);
 
-            meshData.GetVertices(MeshDataUtils.Reinterpret(vertices));
+            meshData.GetVertices(vertices);
 
             Profiler.EndSample();
 
             return vertices;
         }
 
-        public NativeArray<float3> GetNormals()
+        public NativeArray<Vector3> GetNormals()
         {
             if (normals.IsCreated)
             {
@@ -65,16 +65,16 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MedlayWritableMeshData.GetNormals");
 
-            normals = new NativeArray<float3>(meshData.vertexCount, allocator);
+            normals = new NativeArray<Vector3>(meshData.vertexCount, allocator);
 
-            meshData.GetNormals(MeshDataUtils.Reinterpret(normals));
+            meshData.GetNormals(normals);
 
             Profiler.EndSample();
 
             return normals;
         }
 
-        public NativeArray<float4> GetTangents()
+        public NativeArray<Vector4> GetTangents()
         {
             if (tangents.IsCreated)
             {
@@ -83,9 +83,9 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MedlayWritableMeshData.GetTangents");
 
-            tangents = new NativeArray<float4>(meshData.vertexCount, allocator);
+            tangents = new NativeArray<Vector4>(meshData.vertexCount, allocator);
 
-            meshData.GetTangents(MeshDataUtils.Reinterpret(tangents));
+            meshData.GetTangents(tangents);
 
             Profiler.EndSample();
 
@@ -140,16 +140,19 @@ namespace com.superneko.medlay.Core
 
             if (vertices.IsCreated)
             {
+                var vertices = MeshDataUtils.Reinterpret(this.vertices);
                 MeshDataAttributeWriter.SetVertices(ref vertices, meshData);
             }
 
             if (normals.IsCreated)
             {
+                var normals = MeshDataUtils.Reinterpret(this.normals);
                 MeshDataAttributeWriter.SetNormals(ref normals, meshData);
             }
 
             if (tangents.IsCreated)
             {
+                var tangents = MeshDataUtils.Reinterpret(this.tangents);
                 MeshDataAttributeWriter.SetTangents(ref tangents, meshData);
             }
 

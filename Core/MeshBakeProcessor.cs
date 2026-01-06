@@ -126,6 +126,8 @@ namespace com.superneko.medlay.Core
                 {
                     ReallocateIfNeeded(ref boneMatrices, bones.Length);
 
+                    Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneMatrices_Calculate");
+
                     for (int i = 0; i < bones.Length; i++)
                     {
                         var bone = bones[i];
@@ -139,6 +141,8 @@ namespace com.superneko.medlay.Core
                             boneMatrices[i] = worldToBaseMatrix * bones[i].localToWorldMatrix * (Matrix4x4)bindPoses[i];
                         }
                     }
+
+                    Profiler.EndSample();
                 }
             }
             else
@@ -184,9 +188,9 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_Setup");
 
-            var vertices = meshData.GetVertices();
-            var normals = meshData.GetNormals();
-            var tangents = meshData.GetTangents();
+            var vertices = MeshDataUtils.Reinterpret(meshData.GetVertices());
+            var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
+            var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
             ResetArrays(meshData, renderer, worldToBaseMatrix);
 
@@ -247,9 +251,9 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_Setup");
 
-            var vertices = meshData.GetVertices();
-            var normals = meshData.GetNormals();
-            var tangents = meshData.GetTangents();
+            var vertices = MeshDataUtils.Reinterpret(meshData.GetVertices());
+            var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
+            var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
             ResetArrays(meshData, renderer, worldToBaseMatrix);
 

@@ -77,7 +77,7 @@ namespace com.superneko.medlay.Tests
 
             for (int i = 0; i < vertices.Length; i++)
             {
-                vertices[i] += new float3(1.1f, 2.2f, 3.3f);
+                vertices[i] += new Vector3(1.1f, 2.2f, 3.3f);
             }
 
             var updatedMesh = Object.Instantiate(smr.sharedMesh);
