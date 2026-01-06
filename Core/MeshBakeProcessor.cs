@@ -77,6 +77,9 @@ namespace com.superneko.medlay.Core
             if (referenceBakedVertices.IsCreated) referenceBakedVertices.Dispose();
             if (referenceBakedNormals.IsCreated) referenceBakedNormals.Dispose();
             if (referenceBakedTangents.IsCreated) referenceBakedTangents.Dispose();
+            if (referenceUnbakedVertices.IsCreated) referenceUnbakedVertices.Dispose();
+            if (referenceUnbakedNormals.IsCreated) referenceUnbakedNormals.Dispose();
+            if (referenceUnbakedTangents.IsCreated) referenceUnbakedTangents.Dispose();
             blendShapeCache.Clear();
         }
 

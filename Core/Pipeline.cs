@@ -17,6 +17,7 @@ namespace com.superneko.medlay.Core
         MeshUnbakeMeshEditLayerProcessor unbakeProcessor;
         Medlay registry;
         Matrix4x4 worldToBaseMatrix;
+        MeshBakeProcessor meshBakeProcessor;
 
         public MedlayPipeline(Renderer renderer, (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers, Medlay medlay, Matrix4x4 worldToBaseMatrix)
         {
@@ -31,6 +32,7 @@ namespace com.superneko.medlay.Core
             this.unbakeProcessor = new MeshUnbakeMeshEditLayerProcessor(meshBakeProcessor);
 
             this.registry = medlay;
+            this.meshBakeProcessor = meshBakeProcessor;
         }
 
         public void Dispose()
@@ -39,6 +41,11 @@ namespace com.superneko.medlay.Core
             {
                 Object.DestroyImmediate(deformedMesh);
                 deformedMesh = null;
+            }
+            
+            if (meshBakeProcessor != null)
+            {
+                meshBakeProcessor = null;
             }
         }
 
