@@ -49,7 +49,7 @@ namespace com.superneko.medlay.Core
             }
         }
 
-        public MedlayProcessResult Process()
+        public MedlayProcessResult Process(Dictionary<System.Type, object> contextData = null)
         {
             Profiler.BeginSample("MedlayPipeline.Process");
 
@@ -68,6 +68,8 @@ namespace com.superneko.medlay.Core
             }
 
             var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh, worldToBaseMatrix);
+
+            context.ContextData = contextData;
 
             bakeProcessor.ProcessMeshEditLayer(bakeLayer, context);
 

@@ -10,5 +10,7 @@ namespace com.superneko.medlay.Core
         MedlayWritableMeshData WritableMeshData { get; }
         Mesh Mesh { get; }
         Matrix4x4 WorldToBaseMatrix { get; }
+
+        void TryGetProcessContextData<T>(out T data) where T : class;
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Runtime.Remoting.Contexts;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -36,6 +38,7 @@ namespace com.superneko.medlay.Core
 
         Matrix4x4 worldToBaseMatrix;
         public Matrix4x4 WorldToBaseMatrix => worldToBaseMatrix;
+        internal Dictionary<System.Type, object> ContextData = new Dictionary<System.Type, object>();
 
         public void WritebackIfNeed()
         {
@@ -72,6 +75,24 @@ namespace com.superneko.medlay.Core
             };
 
             return context;
+        }
+
+        public void TryGetProcessContextData<T>(out T data) where T : class
+        {
+            if (ContextData == null)
+            {
+                data = null;
+                return;
+            }
+
+            if (ContextData.TryGetValue(typeof(T), out var obj))
+            {
+                data = obj as T;
+            }
+            else
+            {
+                data = null;
+            }
         }
     }
 }
