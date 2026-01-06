@@ -6,7 +6,7 @@ namespace com.superneko.medlay.Editor
     public interface IMeshEditLayerEditor
     {
         internal void SetTarget(MeshEditLayer target);
-        internal void SetObjectTarget(Object targetObject);
+        internal void SetTargetObject(Object targetObject);
         void OnSceneGUI(IMeshEditLayerEditContext context);
         void OnDrawGizmos(IMeshEditLayerEditContext context);
         float InspectorHeight { get; }

@@ -12,7 +12,7 @@ namespace com.superneko.medlay.Editor
             this.target = (T)target;
         }
 
-        void IMeshEditLayerEditor.SetObjectTarget(UnityEngine.Object targetObject)
+        void IMeshEditLayerEditor.SetTargetObject(UnityEngine.Object targetObject)
         {
             this.targetObject = targetObject;
         }

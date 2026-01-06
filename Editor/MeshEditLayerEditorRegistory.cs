@@ -1,12 +1,12 @@
-using System;
 using System.Collections.Generic;
 using com.superneko.medlay.Core;
+using UnityEngine;
 
 namespace com.superneko.medlay.Editor
 {
     public sealed class MeshEditLayerEditorRegistry
     {
-        Dictionary<System.Type, Func<IMeshEditLayerEditor>> editorFactories = new Dictionary<System.Type, Func<IMeshEditLayerEditor>>();
+        Dictionary<System.Type, System.Func<IMeshEditLayerEditor>> editorFactories = new Dictionary<System.Type, System.Func<IMeshEditLayerEditor>>();
 
         static MeshEditLayerEditorRegistry instance;
 
@@ -25,7 +25,7 @@ namespace com.superneko.medlay.Editor
 
         public MeshEditLayerEditorRegistry() { }
 
-        public void RegisterMeshEditLayerEditor<T>(Func<IMeshEditLayerEditor> editorFactory)
+        public void RegisterMeshEditLayerEditor<T>(System.Func<IMeshEditLayerEditor> editorFactory)
         {
             var meshEditLayerType = typeof(T);
             if (!editorFactories.ContainsKey(meshEditLayerType))
@@ -45,7 +45,8 @@ namespace com.superneko.medlay.Editor
 
             var editor = editorFactory();
 
-            editor.SetTarget((MeshEditLayer)Activator.CreateInstance(meshEditLayerType));
+            editor.SetTarget(meshEditLayer);
+            editor.SetTargetObject(targetObject);
 
             return editor;
         }
