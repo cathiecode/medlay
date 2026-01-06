@@ -34,6 +34,9 @@ namespace com.superneko.medlay.Core
 
         public Renderer OriginalRenderer { get; internal set; }
 
+        Matrix4x4 worldToBaseMatrix;
+        public Matrix4x4 WorldToBaseMatrix => worldToBaseMatrix;
+
         public void WritebackIfNeed()
         {
             if (writableMeshData != null)
@@ -43,7 +46,7 @@ namespace com.superneko.medlay.Core
             }
         }
 
-        public static MeshEditContext FromRenderer(Renderer renderer, Mesh writebackMesh)
+        public static MeshEditContext FromRenderer(Renderer renderer, Mesh writebackMesh, Matrix4x4 worldToBaseMatrix)
         {
             Mesh mesh;
 
@@ -64,7 +67,8 @@ namespace com.superneko.medlay.Core
             {
                 writableMeshData = MedlayWritableMeshData.Create(mesh, Allocator.Temp),
                 mesh = writebackMesh,
-                OriginalRenderer = renderer
+                OriginalRenderer = renderer,
+                worldToBaseMatrix = worldToBaseMatrix
             };
 
             return context;

@@ -32,6 +32,11 @@ namespace com.superneko.medlay.Core
 
         public MedlayPipeline CreatePipeline(Renderer renderer, IEnumerable<MeshEditLayer> meshEditLayers)
         {
+            return CreatePipeline(renderer, meshEditLayers, Matrix4x4.identity);
+        }
+
+        public MedlayPipeline CreatePipeline(Renderer renderer, IEnumerable<MeshEditLayer> meshEditLayers, Matrix4x4 worldToBaseMatrix)
+        {
             var meshEditLayerProcessors = new List<IMeshEditLayerProcessor>();
 
             var layers = meshEditLayers.Select(layer =>
@@ -47,7 +52,7 @@ namespace com.superneko.medlay.Core
                 return (layer, processor);
             });
 
-            return new MedlayPipeline(renderer, layers.ToArray(), this);
+            return new MedlayPipeline(renderer, layers.ToArray(), this, worldToBaseMatrix);
         }
 
         internal void GetProcessorForMeshEditLayer(MeshEditLayer meshEditLayer, out IMeshEditLayerProcessor processor)

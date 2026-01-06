@@ -25,17 +25,19 @@ namespace com.superneko.medlay.Editor
 
         public MeshEditLayerEditorRegistry() { }
 
-        public void RegisterMeshEditLayerEditor<T>(Func<IMeshEditLayerEditor> editor)
+        public void RegisterMeshEditLayerEditor<T>(Func<IMeshEditLayerEditor> editorFactory)
         {
             var meshEditLayerType = typeof(T);
             if (!editorFactories.ContainsKey(meshEditLayerType))
             {
-                editorFactories.Add(meshEditLayerType, editor);
+                editorFactories.Add(meshEditLayerType, editorFactory);
             }
         }
 
-        public IMeshEditLayerEditor CreateMeshEditLayerEditor(System.Type meshEditLayerType)
+        public IMeshEditLayerEditor CreateFor(MeshEditLayer meshEditLayer, Object targetObject)
         {
+            var meshEditLayerType = meshEditLayer.GetType();
+
             if (!editorFactories.TryGetValue(meshEditLayerType, out var editorFactory))
             {
                 throw new System.Exception($"Mesh Edit Layer Editor for {meshEditLayerType} is not registered."); // TODO: Fallback editor

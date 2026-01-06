@@ -42,8 +42,6 @@ namespace com.superneko.medlay.Runtime
         public static Material[] inspectedLayerMaterials;
         public static float inspectedLayerLastProcessedOn = 0;
 
-        float timer = 0;
-
         public float clearAfterSeconds = 30f;
         public float showingProcessedMeshOn = 0;
 
@@ -55,8 +53,6 @@ namespace com.superneko.medlay.Runtime
 
         void Update()
         {
-            timer += Time.deltaTime;
-
             mf.sharedMesh = inspectedLayerMesh;
             if (inspectedLayerMaterials != null) mr.materials = inspectedLayerMaterials;
             showingProcessedMeshOn = inspectedLayerLastProcessedOn;
@@ -65,7 +61,6 @@ namespace com.superneko.medlay.Runtime
             {
                 inspectedLayerMesh = null;
                 inspectedLayerMaterials = null;
-                timer = 0f;
             }
         }
     }

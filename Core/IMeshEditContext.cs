@@ -9,5 +9,6 @@ namespace com.superneko.medlay.Core
         Renderer OriginalRenderer { get; }
         MedlayWritableMeshData WritableMeshData { get; }
         Mesh Mesh { get; }
+        Matrix4x4 WorldToBaseMatrix { get; }
     }
 }

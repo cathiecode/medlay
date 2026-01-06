@@ -12,7 +12,7 @@ namespace com.superneko.medlay.Core
     public sealed class MedlayWritableMeshData : System.IDisposable
     {
         Mesh baseMesh;
-        MeshDataArray meshDataArray;
+        internal MeshDataArray meshDataArray;
 
         NativeArray<float3> vertices;
         NativeArray<float3> normals;

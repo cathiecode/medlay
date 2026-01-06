@@ -5,7 +5,7 @@ using UnityEngine.Profiling;
 
 namespace com.superneko.medlay.Core
 {
-    public sealed class MedlayPipeline
+    public sealed class MedlayPipeline : System.IDisposable
     {
         Renderer originalRenderer;
         Mesh deformedMesh;
@@ -16,22 +16,14 @@ namespace com.superneko.medlay.Core
         BakeMeshEditLayerProcessor bakeProcessor;
         MeshUnbakeMeshEditLayerProcessor unbakeProcessor;
         Medlay registry;
+        Matrix4x4 worldToBaseMatrix;
 
-        public MedlayPipeline(Renderer renderer, (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers, Medlay medlay)
+        public MedlayPipeline(Renderer renderer, (MeshEditLayer, IMeshEditLayerProcessor)[] meshEditLayers, Medlay medlay, Matrix4x4 worldToBaseMatrix)
         {
             this.originalRenderer = renderer;
-
-            var originalMesh = renderer switch
-            {
-                SkinnedMeshRenderer smr => smr.sharedMesh,
-                MeshRenderer mr => mr.GetComponent<MeshFilter>().sharedMesh,
-                _ => throw new System.Exception("Unsupported renderer type: " + renderer.GetType().Name)
-            };
+            this.worldToBaseMatrix = worldToBaseMatrix;
 
             var meshBakeProcessor = new MeshBakeProcessor();
-
-            deformedMesh = Object.Instantiate(originalMesh);
-            deformedMesh.name = "MedlayDeformedMesh";
 
             this.meshEditLayers = meshEditLayers;
 
@@ -41,10 +33,34 @@ namespace com.superneko.medlay.Core
             this.registry = medlay;
         }
 
-        public void Process()
+        public void Dispose()
+        {
+            if (deformedMesh != null)
+            {
+                Object.DestroyImmediate(deformedMesh);
+                deformedMesh = null;
+            }
+        }
+
+        public MedlayProcessResult Process()
         {
             Profiler.BeginSample("MedlayPipeline.Process");
-            var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh);
+
+            // TODO: Optimize
+            if (deformedMesh == null)
+            {
+                var originalMesh = originalRenderer switch
+                {
+                    SkinnedMeshRenderer smr => smr.sharedMesh,
+                    MeshRenderer mr => mr.GetComponent<MeshFilter>().sharedMesh,
+                    _ => throw new System.Exception("Unsupported renderer type: " + originalRenderer.GetType().Name)
+                };
+
+                deformedMesh = Object.Instantiate(originalMesh);
+                deformedMesh.name = "MedlayDeformedMesh";
+            }
+
+            var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh, worldToBaseMatrix);
 
             bakeProcessor.ProcessMeshEditLayer(bakeLayer, context);
 
@@ -61,15 +77,14 @@ namespace com.superneko.medlay.Core
 
             context.WritebackIfNeed();
             Profiler.EndSample();
+
+            return new MedlayProcessResult(context);
         }
 
-        public Mesh GetDeformedMesh()
+        public void Refresh(ICollection<MeshEditLayer> newMeshEditLayers, Matrix4x4 newWorldToBaseMatrix)
         {
-            return deformedMesh;
-        }
+            this.worldToBaseMatrix = newWorldToBaseMatrix;
 
-        public void Refresh(ICollection<MeshEditLayer> newMeshEditLayers)
-        {
             (MeshEditLayer, IMeshEditLayerProcessor)[] updatedLayers = meshEditLayers;
 
             if (updatedLayers.Length != newMeshEditLayers.Count)

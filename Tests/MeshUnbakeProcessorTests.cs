@@ -20,7 +20,7 @@ namespace com.superneko.medlay.Tests
 
             Assert.DoesNotThrow(() =>
             {
-                TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
+                TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToBase(writableMeshData, smr);
             });
         }
 
@@ -32,7 +32,7 @@ namespace com.superneko.medlay.Tests
             var bakedMesh = Object.Instantiate(originalMesh);
 
             using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
-            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToBase(writableMeshData, smr);
             MedlayWritableMeshData.WritebackAndDispose(writableMeshData, bakedMesh);
             
             Assert.AreEqual(originalMesh.vertexCount, bakedMesh.vertexCount);
@@ -55,11 +55,11 @@ namespace com.superneko.medlay.Tests
 
             using var writableMeshData = MedlayWritableMeshData.Create(bakedMesh, Unity.Collections.Allocator.Temp);
 
-            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(writableMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToBase(writableMeshData, smr);
 
             Assert.DoesNotThrow(() =>
             {
-                TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(writableMeshData, smr);
+                TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromBase(writableMeshData, smr);
             });
         }
 
@@ -71,8 +71,8 @@ namespace com.superneko.medlay.Tests
 
             var modifiedMesh = Object.Instantiate(originalMesh);
             using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
-            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(modifiedMeshData, smr);
-            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(modifiedMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToBase(modifiedMeshData, smr);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromBase(modifiedMeshData, smr);
             MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
@@ -121,8 +121,8 @@ namespace com.superneko.medlay.Tests
 
             var modifiedMesh = Object.Instantiate(originalMesh);
             using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
-            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToWorld(modifiedMeshData, meshRenderer);
-            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromWorld(modifiedMeshData, meshRenderer);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().BakeMeshToBase(modifiedMeshData, meshRenderer);
+            TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>().UnBakeMeshFromBase(modifiedMeshData, meshRenderer);
             MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);
@@ -145,8 +145,8 @@ namespace com.superneko.medlay.Tests
                 {
                     Profiler.BeginSample("MeshBakeProcessor_SequencialProcess_Iteration");
                     using var modifiedMeshData = MedlayWritableMeshData.Create(modifiedMesh, Unity.Collections.Allocator.Temp);
-                    processor.BakeMeshToWorld(modifiedMeshData, smr);
-                    processor.UnBakeMeshFromWorld(modifiedMeshData, smr);
+                    processor.BakeMeshToBase(modifiedMeshData, smr);
+                    processor.UnBakeMeshFromBase(modifiedMeshData, smr);
                     MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
                     Profiler.EndSample();
                 }
@@ -165,8 +165,8 @@ namespace com.superneko.medlay.Tests
 
             var processor = TestUtils.CreateInstanceWithPrivateConstructor<MeshBakeProcessor>();
 
-            processor.BakeMeshToWorld(modifiedMeshData, smr);
-            processor.UnBakeMeshFromWorld(modifiedMeshData, smr);
+            processor.BakeMeshToBase(modifiedMeshData, smr);
+            processor.UnBakeMeshFromBase(modifiedMeshData, smr);
             MedlayWritableMeshData.WritebackAndDispose(modifiedMeshData, modifiedMesh);
 
             Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount);

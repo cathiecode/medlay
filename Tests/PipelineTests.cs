@@ -77,11 +77,9 @@ namespace com.superneko.medlay.Tests
             var smr = TestUtils.LoadAvatarSMR("55eb1dc98a84ca547b4c78dd8ab9ff3a");
             var originalMesh = smr.sharedMesh;
 
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
+            using var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
 
-            pipeline.Process();
-
-            var deformedMesh = pipeline.GetDeformedMesh();
+            var deformedMesh = pipeline.Process().AsMesh();
 
             TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
         }
@@ -97,9 +95,9 @@ namespace com.superneko.medlay.Tests
             var smr = TestUtils.LoadAvatarSMR("440876361ce1587438eaa1b04b593d6e");
             var meshEditLayer = new MockShapeLayer();
 
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[] { meshEditLayer });
+            using var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[] { meshEditLayer });
 
-            pipeline.Process();
+            var result = pipeline.Process();
 
             Assert.IsTrue(meshEditLayerProcessor.called);
         }
@@ -123,11 +121,9 @@ namespace com.superneko.medlay.Tests
 
             var smr = TestUtils.LoadAvatarSMR("10a61e39ad8edab4bbc379ca484bd361");
 
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
+            using var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
 
-            pipeline.Process();
-
-            var deformedMesh = pipeline.GetDeformedMesh();
+            var deformedMesh = pipeline.Process().AsMesh();
 
             TestUtils.AssertMeshesAreSame(smr.sharedMesh, deformedMesh, allowExactMatch: true);
             TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
@@ -145,9 +141,7 @@ namespace com.superneko.medlay.Tests
 
             var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[0]);
 
-            pipeline.Process();
-
-            var deformedMesh = pipeline.GetDeformedMesh();
+            var deformedMesh = pipeline.Process().AsMesh();
 
             TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
             TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
@@ -172,11 +166,9 @@ namespace com.superneko.medlay.Tests
                 shift = shift
             };
 
-            var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[] { shiftLayer, new DebugMeshEditLayer() });
+            using var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[] { shiftLayer, new DebugMeshEditLayer() });
 
-            pipeline.Process();
-
-            var deformedMesh = pipeline.GetDeformedMesh();
+            var deformedMesh = pipeline.Process().AsMesh();
 
             var originalVertices = mr.GetComponent<MeshFilter>().sharedMesh.vertices;
             var deformedVertices = deformedMesh.vertices;
@@ -189,6 +181,46 @@ namespace com.superneko.medlay.Tests
                 var actual = deformedVertices[i];
 
                 Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public void ProcessPipeline_WithBaseMatrix_ShiftsVerticesCorrectly()
+        {
+            var medlay = new Medlay();
+
+            medlay.RegisterMeshEditLayerProcessor<ShiftShapeLayer>(() => new ShiftShapeLayerProcessor());
+
+            var go = TestUtils.LoadAssetByGUID<GameObject>("ae1478b69f7c8c3489353901b44b7593");
+
+            var mr = go.GetComponent<MeshRenderer>();
+
+            var shift = new Vector3(0.1f, 0f, 0f);
+            var shiftLayer = new ShiftShapeLayer()
+            {
+                shift = shift
+            };
+
+            var baseToWorldMatrix = Matrix4x4.TRS(new Vector3(0f, 0f, 0f), Quaternion.Euler(0f, 90f, 0f), new Vector3(1f, 1f, 1f));
+            var worldToBaseMatrix = baseToWorldMatrix.inverse;
+
+            using var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[] { shiftLayer }, worldToBaseMatrix);
+
+            var deformedMesh = pipeline.Process().AsMesh();
+
+            var originalVertices = mr.GetComponent<MeshFilter>().sharedMesh.vertices;
+            var deformedVertices = deformedMesh.vertices;
+
+            Assert.AreEqual(originalVertices.Length, deformedVertices.Length);
+
+            for (int i = 0; i < originalVertices.Length; i++)
+            {
+                var expected = originalVertices[i] + worldToBaseMatrix.MultiplyPoint3x4(shift);
+                var actual = deformedVertices[i];
+
+                Debug.Log($"Original: {originalVertices[i]}, Deformed: {deformedVertices[i]}, Expected: {expected}");
+
+                Assert.Less((expected - actual).magnitude, 0.0001f);
             }
         }
     }
