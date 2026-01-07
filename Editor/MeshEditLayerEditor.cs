@@ -12,7 +12,7 @@ namespace com.superneko.medlay.Editor
             this.target = (T)target;
         }
 
-        void IMeshEditLayerEditor.SetTargetObject(UnityEngine.Object targetObject)
+        void IMeshEditLayerEditor.SetTargetObject(Object targetObject)
         {
             this.targetObject = targetObject;
         }
@@ -20,6 +20,6 @@ namespace com.superneko.medlay.Editor
         public abstract void OnSceneGUI(IMeshEditLayerEditContext context);
         public abstract void OnDrawGizmos(IMeshEditLayerEditContext context);
         public abstract float InspectorHeight { get; }
-        public abstract void OnInspectorGUI(UnityEngine.Rect rect, UnityEditor.SerializedProperty serializedProperty);
+        public abstract void OnInspectorGUI(IMeshEditLayerEditContext context, Rect rect, UnityEditor.SerializedProperty serializedProperty);
     }
 }

@@ -10,6 +10,6 @@ namespace com.superneko.medlay.Editor
         void OnSceneGUI(IMeshEditLayerEditContext context);
         void OnDrawGizmos(IMeshEditLayerEditContext context);
         float InspectorHeight { get; }
-        void OnInspectorGUI(UnityEngine.Rect rect, UnityEditor.SerializedProperty serializedProperty);
+        void OnInspectorGUI(IMeshEditLayerEditContext context, Rect rect, UnityEditor.SerializedProperty serializedProperty);
     }
 }
