@@ -201,7 +201,7 @@ namespace com.superneko.medlay.Tests
                 shift = shift
             };
 
-            var baseToWorldMatrix = Matrix4x4.TRS(new Vector3(0f, 0f, 0f), Quaternion.Euler(0f, 90f, 0f), new Vector3(1f, 1f, 1f));
+            var baseToWorldMatrix = Matrix4x4.TRS(new Vector3(0f, 0f, 0f), Quaternion.Euler(0f, 0f, 0f), new Vector3(2f, 1f, 1f));
             var worldToBaseMatrix = baseToWorldMatrix.inverse;
 
             using var pipeline = medlay.CreatePipeline(mr, new MeshEditLayer[] { shiftLayer }, worldToBaseMatrix);
@@ -215,7 +215,7 @@ namespace com.superneko.medlay.Tests
 
             for (int i = 0; i < originalVertices.Length; i++)
             {
-                var expected = originalVertices[i] + worldToBaseMatrix.MultiplyPoint3x4(shift);
+                var expected = originalVertices[i] + baseToWorldMatrix.MultiplyPoint3x4(shift);
                 var actual = deformedVertices[i];
 
                 Debug.Log($"Original: {originalVertices[i]}, Deformed: {deformedVertices[i]}, Expected: {expected}");

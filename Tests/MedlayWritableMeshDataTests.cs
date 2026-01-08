@@ -25,9 +25,9 @@ namespace com.superneko.medlay.Tests
             var vertices = medlayWritableMeshData.GetVertices();
 
             Assert.AreEqual(3, vertices.Length);
-            Assert.AreEqual(new float3(0, 0, 0), vertices[0]);
-            Assert.AreEqual(new float3(1, 0, 0), vertices[1]);
-            Assert.AreEqual(new float3(0, 1, 0), vertices[2]);
+            Assert.AreEqual(new Vector3(0, 0, 0), vertices[0]);
+            Assert.AreEqual(new Vector3(1, 0, 0), vertices[1]);
+            Assert.AreEqual(new Vector3(0, 1, 0), vertices[2]);
 
             medlayWritableMeshData.Dispose();
         }
