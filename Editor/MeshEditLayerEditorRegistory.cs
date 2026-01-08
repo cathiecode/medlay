@@ -6,7 +6,7 @@ namespace com.superneko.medlay.Editor
 {
     public sealed class MeshEditLayerEditorRegistry
     {
-        Dictionary<System.Type, System.Func<IMeshEditLayerEditor>> editorFactories = new Dictionary<System.Type, System.Func<IMeshEditLayerEditor>>();
+        Dictionary<System.Type, IMeshEditLayerDefinition> editorFactories = new Dictionary<System.Type, IMeshEditLayerDefinition>();
 
         static MeshEditLayerEditorRegistry instance;
 
@@ -25,12 +25,12 @@ namespace com.superneko.medlay.Editor
 
         public MeshEditLayerEditorRegistry() { }
 
-        public void RegisterMeshEditLayerEditor<T>(System.Func<IMeshEditLayerEditor> editorFactory)
+        public void RegisterMeshEditLayerEditor<T>(IMeshEditLayerDefinition layerDefinition)
         {
             var meshEditLayerType = typeof(T);
             if (!editorFactories.ContainsKey(meshEditLayerType))
             {
-                editorFactories.Add(meshEditLayerType, editorFactory);
+                editorFactories.Add(meshEditLayerType, layerDefinition);
             }
         }
 
@@ -43,12 +43,14 @@ namespace com.superneko.medlay.Editor
                 throw new System.Exception($"Mesh Edit Layer Editor for {meshEditLayerType} is not registered."); // TODO: Fallback editor
             }
 
-            var editor = editorFactory();
+            var editor = editorFactory.CreateEditorInstance();
 
             editor.SetTarget(meshEditLayer);
             editor.SetTargetObject(targetObject);
 
             return editor;
         }
+
+        public IEnumerable<IMeshEditLayerDefinition> RegisteredMeshEditLayerDefinitions => editorFactories.Values;
     }
 }
