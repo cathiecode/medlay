@@ -23,6 +23,11 @@ namespace com.superneko.medlay.Core
             int frameIndex;
         }
 
+        public struct Assumptions
+        {
+            public bool boneMatricesAreNotChanged;
+        }
+
         struct BlendShapeContainer : IDisposable
         {
             public NativeArray<float3> deltaVertices;
@@ -65,7 +70,7 @@ namespace com.superneko.medlay.Core
 
         internal MeshBakeProcessor()
         {
-            
+
         }
 
         ~MeshBakeProcessor()
@@ -83,78 +88,82 @@ namespace com.superneko.medlay.Core
             blendShapeCache.Clear();
         }
 
-        void ResetArrays(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix)
+        void ResetArrays(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix, Assumptions assumptions = default)
         {
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays");
 
             vertexCount = meshData.vertexCount;
 
-            NativeArray<float4x4> bindPoses;
-
-            if (meshData.BaseMesh.bindposeCount == 0)
-            {
-                bindPoses = new NativeArray<float4x4>(1, Allocator.Temp);
-                bindPoses[0] = float4x4.identity;
-            } else
-            {
-                bindPoses = meshData.GetBindposesReadOnly();
-            }
-
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneMatrices");
-            if (renderer is SkinnedMeshRenderer)
+            if (!assumptions.boneMatricesAreNotChanged)
             {
-                var smr = renderer as SkinnedMeshRenderer;
+                NativeArray<float4x4> bindPoses;
 
-                var bones = smr.bones;
-
-                if (bones.Length != bindPoses.Length)
+                if (meshData.BaseMesh.bindposeCount == 0)
                 {
-                    if (bindPoses.Length == 1)
+                    bindPoses = new NativeArray<float4x4>(1, Allocator.Temp);
+                    bindPoses[0] = float4x4.identity;
+                }
+                else
+                {
+                    bindPoses = meshData.GetBindposesReadOnly();
+                }
+
+                if (renderer is SkinnedMeshRenderer)
+                {
+                    var smr = renderer as SkinnedMeshRenderer;
+
+                    var bones = smr.bones;
+
+                    if (bones.Length != bindPoses.Length)
                     {
-                        // Static mesh assigned to SMR
-                        ReallocateIfNeeded(ref boneMatrices, 1);
-                        boneMatrices[0] = worldToBaseMatrix * renderer.transform.localToWorldMatrix;
+                        if (bindPoses.Length == 1)
+                        {
+                            // Static mesh assigned to SMR
+                            ReallocateIfNeeded(ref boneMatrices, 1);
+                            boneMatrices[0] = worldToBaseMatrix * renderer.transform.localToWorldMatrix;
+                        }
+                        else
+                        {
+                            Profiler.EndSample();
+                            // TODO: Handle
+                            throw new Exception("Bone count mismatch between SkinnedMeshRenderer and Mesh bindposes.");
+                        }
                     }
                     else
                     {
+                        ReallocateIfNeeded(ref boneMatrices, bones.Length);
+
+                        Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneMatrices_Calculate");
+
+                        for (int i = 0; i < bones.Length; i++)
+                        {
+                            var bone = bones[i];
+                            if (bone == null)
+                            {
+                                boneMatrices[i] = float4x4.identity;
+                            }
+                            else
+                            {
+                                // NOTE: float4x4 * is CROSS PRODUCT.
+                                boneMatrices[i] = worldToBaseMatrix * bone.localToWorldMatrix * (Matrix4x4)bindPoses[i];
+                            }
+                        }
+
                         Profiler.EndSample();
-                        // TODO: Handle
-                        throw new Exception("Bone count mismatch between SkinnedMeshRenderer and Mesh bindposes.");
                     }
                 }
                 else
                 {
-                    ReallocateIfNeeded(ref boneMatrices, bones.Length);
+                    ReallocateIfNeeded(ref boneMatrices, bindPoses.Length);
 
-                    Profiler.BeginSample("MeshBakeProcessor.ResetArrays_BoneMatrices_Calculate");
-
-                    for (int i = 0; i < bones.Length; i++)
+                    for (int i = 0; i < boneMatrices.Length; i++)
                     {
-                        var bone = bones[i];
-                        if (bone == null)
-                        {
-                            boneMatrices[i] = float4x4.identity;
-                        }
-                        else
-                        {
-                            // NOTE: float4x4 * is CROSS PRODUCT.
-                            boneMatrices[i] = worldToBaseMatrix * bones[i].localToWorldMatrix * (Matrix4x4)bindPoses[i];
-                        }
+                        boneMatrices[i] = worldToBaseMatrix * renderer.transform.localToWorldMatrix;
                     }
-
-                    Profiler.EndSample();
                 }
+                bindPoses.Dispose();
             }
-            else
-            {
-                ReallocateIfNeeded(ref boneMatrices, bindPoses.Length);
-
-                for (int i = 0; i < boneMatrices.Length; i++)
-                {
-                    boneMatrices[i] = worldToBaseMatrix * renderer.transform.localToWorldMatrix;
-                }
-            }
-            bindPoses.Dispose();
             Profiler.EndSample();
 
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays_AllocateDeltaArrays");
@@ -245,7 +254,7 @@ namespace com.superneko.medlay.Core
             UnBakeMeshFromBase(meshData, renderer, Matrix4x4.identity);
         }
 
-        public void UnBakeMeshFromBase(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix)
+        public void UnBakeMeshFromBase(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix, Assumptions assumptions = default)
         {
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh");
 
@@ -255,7 +264,7 @@ namespace com.superneko.medlay.Core
             var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
             var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
-            ResetArrays(meshData, renderer, worldToBaseMatrix);
+            ResetArrays(meshData, renderer, worldToBaseMatrix, assumptions);
 
             if (renderer is SkinnedMeshRenderer)
             {

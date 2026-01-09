@@ -63,8 +63,10 @@ namespace com.superneko.medlay.Core
                     _ => throw new System.Exception("Unsupported renderer type: " + originalRenderer.GetType().Name)
                 };
 
+                Profiler.BeginSample("MedlayPipeline.Process - Mesh Instantiation");
                 deformedMesh = Object.Instantiate(originalMesh);
                 deformedMesh.name = "MedlayDeformedMesh";
+                Profiler.EndSample();
             }
 
             var context = MeshEditContext.FromRenderer(originalRenderer, deformedMesh, worldToBaseMatrix);
