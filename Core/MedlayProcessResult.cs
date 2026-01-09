@@ -36,16 +36,33 @@ namespace com.superneko.medlay.Core
 
             disposed = true;
 
+            var originalVertices = mesh.vertices;
+            var originalNormals = mesh.normals;
+            var originalTangents = mesh.tangents;
+
             var deformedMesh = context.Mesh;
+
             var vertices = deformedMesh.vertices;
             var normals = deformedMesh.normals;
             var tmpTangents = deformedMesh.tangents;
             var tangents = new Vector3[tmpTangents.Length];
 
-            for (int i = 0; i < tmpTangents.Length; i++)
+            var hasNormals = originalNormals.Length > 0;
+            var hasTangents = originalTangents.Length > 0;
+
+            for (int i = 0; i < originalVertices.Length; i++)
             {
-                var t = tmpTangents[i];
-                tangents[i] = new Vector3(t.x, t.y, t.z);
+                vertices[i] -= originalVertices[i];
+                if (hasNormals)
+                {
+                    normals[i] -= originalNormals[i];
+                }
+                if (hasTangents)
+                {
+                    var t = originalTangents[i];
+                    var dt = tmpTangents[i];
+                    tangents[i] = new Vector3(dt.x - t.x, dt.y - t.y, dt.z - t.z);
+                }
             }
 
             mesh.AddBlendShapeFrame(shapeName, weight, vertices, normals, tangents);
@@ -69,6 +86,8 @@ namespace com.superneko.medlay.Core
             {
                 disposed = true;
             }
+
+            context.DisposeWritableMeshIfAvailable();
         }
     }
 }

@@ -84,7 +84,6 @@ namespace com.superneko.medlay.Core
 
             unbakeProcessor.ProcessMeshEditLayer(unbakeLayer, context);
 
-            context.WritebackIfNeed();
             Profiler.EndSample();
 
             return new MedlayProcessResult(context);

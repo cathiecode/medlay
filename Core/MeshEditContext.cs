@@ -49,6 +49,15 @@ namespace com.superneko.medlay.Core
             }
         }
 
+        internal void DisposeWritableMeshIfAvailable()
+        {
+            if (writableMeshData != null)
+            {
+                writableMeshData.Dispose();
+                writableMeshData = null;
+            }
+        }
+
         public static MeshEditContext FromRenderer(Renderer renderer, Mesh writebackMesh, Matrix4x4 worldToBaseMatrix)
         {
             Mesh mesh;
