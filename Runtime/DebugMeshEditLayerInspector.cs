@@ -1,5 +1,7 @@
 using com.superneko.medlay.Core;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace com.superneko.medlay.Runtime
@@ -8,7 +10,11 @@ namespace com.superneko.medlay.Runtime
 
     public class DebugMeshEditLayerProcessor : MeshEditLayerProcessor<DebugMeshEditLayer>
     {
+        #if UNITY_EDITOR
         [InitializeOnLoadMethod]
+        #else
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        #endif
         static void Register()
         {
             Medlay.Instance.RegisterMeshEditLayerProcessor<DebugMeshEditLayer>(() => new DebugMeshEditLayerProcessor());
