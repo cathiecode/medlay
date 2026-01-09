@@ -24,11 +24,15 @@ namespace com.superneko.medlay.Core.Internal.Burst
         )
         {
             int boneWeightIndex = 0;
+            bool hasNormals = normals.Length > 0;
+            bool hasTangents = tangents.Length > 0;
+            bool processingStaticMesh = bonesPerVertex.Length == 0;
+
             for (int i = 0; i < vertexCount; i++)
             {
                 float4x4 skinMatrix = Unity.Mathematics.float4x4.zero;
 
-                if (bonesPerVertex.Length == 0)
+                if (processingStaticMesh)
                 {
                     skinMatrix = boneMatrices[0];
                 }
@@ -44,12 +48,12 @@ namespace com.superneko.medlay.Core.Internal.Burst
 
                 vertices[i] = math.transform(skinMatrix, vertices[i] + totalDeltaVertices[i]);
 
-                if (normals.Length > 0)
+                if (hasNormals)
                 {
                     normals[i] = math.normalize(math.rotate(skinMatrix, normals[i] + totalDeltaNormals[i]));
                 }
 
-                if (tangents.Length > 0)
+                if (hasTangents)
                 {
                     float4 t = tangents[i];
                     var tangentWithDelta = math.rotate(skinMatrix, new float3(t.x, t.y, t.z) + totalDeltaTangents[i]);
