@@ -27,6 +27,11 @@ namespace com.superneko.medlay.Core
             return context.Mesh;
         }
 
+        public Transform[] GetBones()
+        {
+            return context.Bones;
+        }
+
         public void AddAsBlendShapeFrame(Mesh mesh, string shapeName, float weight)
         {
             if (disposed)
@@ -78,6 +83,24 @@ namespace com.superneko.medlay.Core
             disposed = true;
 
             Mesh.ApplyAndDisposeWritableMeshData(context.WritableMeshData.meshDataArray, mesh);
+        }
+
+        public void ApplyToMeshAndPreserveBlendShape(Mesh mesh)
+        {
+            if (disposed)
+            {
+                throw new System.ObjectDisposedException("MedlayProcessResult");
+            }
+
+            disposed = true;
+
+            mesh.SetVertices(context.WritableMeshData.GetVertices());
+            mesh.SetNormals(context.WritableMeshData.GetNormals());
+            mesh.SetTangents(context.WritableMeshData.GetTangents());
+            mesh.boneWeights = context.Mesh.boneWeights;
+            mesh.bindposes = context.Mesh.bindposes;
+
+            context.DisposeWritableMeshIfAvailable();
         }
 
         public void Dispose()

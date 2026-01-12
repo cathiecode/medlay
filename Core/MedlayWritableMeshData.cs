@@ -205,7 +205,7 @@ namespace com.superneko.medlay.Core
             var bindposes = writableMeshData.baseMesh.bindposes;
 
             writableMeshData.Writeback();
-            ApplyAndDisposeWritableMeshData(writableMeshData.meshDataArray, mesh, MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontRecalculateBounds);
+            ApplyAndDisposeWritableMeshData(writableMeshData.meshDataArray, mesh, MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontResetBoneBounds | MeshUpdateFlags.DontNotifyMeshUsers);
             writableMeshData.Dispose();
 
             // Restore bindposes

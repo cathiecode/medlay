@@ -12,7 +12,8 @@ namespace com.superneko.medlay.Core
 
         public MedlayWritableMeshData WritableMeshData
         {
-            get {
+            get
+            {
                 if (writableMeshData == null)
                 {
                     writableMeshData = MedlayWritableMeshData.Create(mesh, Allocator.Temp);
@@ -39,6 +40,30 @@ namespace com.superneko.medlay.Core
         Matrix4x4 worldToBaseMatrix;
         public Matrix4x4 WorldToBaseMatrix => worldToBaseMatrix;
         internal Dictionary<System.Type, object> ContextData = new Dictionary<System.Type, object>();
+
+        Transform[] bones;
+        public Transform[] Bones
+        {
+            get
+            {
+                switch (OriginalRenderer)
+                {
+                    case SkinnedMeshRenderer smr:
+                        if (bones == null)
+                        {
+                            bones = smr.bones;
+                        }
+
+                        return bones;
+                    default:
+                        return null;
+                }
+            }
+            set
+            {
+                bones = value;
+            }
+        }
 
         public void WritebackIfNeed()
         {
