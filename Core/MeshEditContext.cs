@@ -62,8 +62,12 @@ namespace com.superneko.medlay.Core
             set
             {
                 bones = value;
+                _bonesAreChanged = true;
             }
         }
+
+        bool _bonesAreChanged = false;
+        bool IMeshEditContext.BoneIsChanged => _bonesAreChanged;
 
         public void WritebackIfNeed()
         {

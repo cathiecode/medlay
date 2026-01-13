@@ -11,6 +11,7 @@ namespace com.superneko.medlay.Core
         Mesh Mesh { get; }
         Matrix4x4 WorldToBaseMatrix { get; }
         Transform[] Bones { get; set; }
+        internal bool BoneIsChanged { get; }
 
         void TryGetProcessContextData<T>(out T data) where T : class;
     }

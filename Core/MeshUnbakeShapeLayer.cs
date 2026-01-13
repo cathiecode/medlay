@@ -13,7 +13,14 @@ namespace com.superneko.medlay.Core
 
         public override void ProcessMeshEditLayer(MeshUnbakeMeshEditLayer meshEditLayer, IMeshEditContext context)
         {
-            meshBakeProcessor.UnBakeMeshFromBase(context.WritableMeshData, context.OriginalRenderer, context.WorldToBaseMatrix, new MeshBakeProcessor.Assumptions { boneMatricesAreNotChanged = true });
+            meshBakeProcessor.UnBakeMeshFromBase(
+                context.WritableMeshData,
+                context.OriginalRenderer,
+                context.Bones,
+                context.WorldToBaseMatrix,
+                new MeshBakeProcessor.Assumptions {
+                    boneMatricesAreNotChanged = !context.BoneIsChanged
+                });
         }
     }
 }

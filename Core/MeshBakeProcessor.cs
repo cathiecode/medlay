@@ -88,7 +88,7 @@ namespace com.superneko.medlay.Core
             blendShapeCache.Clear();
         }
 
-        void ResetArrays(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix, Assumptions assumptions = default)
+        void ResetArrays(MedlayWritableMeshData meshData, Renderer renderer, Transform[] bones, Matrix4x4 worldToBaseMatrix, Assumptions assumptions = default)
         {
             Profiler.BeginSample("MeshBakeProcessor.ResetArrays");
 
@@ -109,12 +109,8 @@ namespace com.superneko.medlay.Core
                     bindPoses = meshData.GetBindposesReadOnly();
                 }
 
-                if (renderer is SkinnedMeshRenderer)
+                if (bones != null)
                 {
-                    var smr = renderer as SkinnedMeshRenderer;
-
-                    var bones = smr.bones;
-
                     if (bones.Length != bindPoses.Length)
                     {
                         if (bindPoses.Length == 1)
@@ -186,12 +182,12 @@ namespace com.superneko.medlay.Core
             // TODO: Blendshape invalidation
         }
 
-        public void BakeMeshToBase(MedlayWritableMeshData meshData, Renderer renderer)
+        public void BakeMeshToBase(MedlayWritableMeshData meshData, Renderer renderer, Transform[] bones = null)
         {
-            BakeMeshToBase(meshData, renderer, Matrix4x4.identity);
+            BakeMeshToBase(meshData, renderer, bones, Matrix4x4.identity);
         }
 
-        public void BakeMeshToBase(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix)
+        public void BakeMeshToBase(MedlayWritableMeshData meshData, Renderer renderer, Transform[] bones, Matrix4x4 worldToBaseMatrix)
         {
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld");
 
@@ -201,7 +197,7 @@ namespace com.superneko.medlay.Core
             var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
             var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
-            ResetArrays(meshData, renderer, worldToBaseMatrix);
+            ResetArrays(meshData, renderer, bones, worldToBaseMatrix);
 
             if (renderer is SkinnedMeshRenderer)
             {
@@ -249,12 +245,12 @@ namespace com.superneko.medlay.Core
             blendShapeCache.Tick();
         }
 
-        public void UnBakeMeshFromBase(MedlayWritableMeshData meshData, Renderer renderer)
+        public void UnBakeMeshFromBase(MedlayWritableMeshData meshData, Renderer renderer, Transform[] bones = null)
         {
-            UnBakeMeshFromBase(meshData, renderer, Matrix4x4.identity);
+            UnBakeMeshFromBase(meshData, renderer, bones, Matrix4x4.identity);
         }
 
-        public void UnBakeMeshFromBase(MedlayWritableMeshData meshData, Renderer renderer, Matrix4x4 worldToBaseMatrix, Assumptions assumptions = default)
+        public void UnBakeMeshFromBase(MedlayWritableMeshData meshData, Renderer renderer, Transform[] bones, Matrix4x4 worldToBaseMatrix, Assumptions assumptions = default)
         {
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh");
 
@@ -264,7 +260,7 @@ namespace com.superneko.medlay.Core
             var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
             var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
-            ResetArrays(meshData, renderer, worldToBaseMatrix, assumptions);
+            ResetArrays(meshData, renderer, bones, worldToBaseMatrix, assumptions);
 
             if (renderer is SkinnedMeshRenderer)
             {
