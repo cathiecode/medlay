@@ -104,6 +104,11 @@ namespace com.superneko.medlay.Core
                     throw new System.Exception("Unsupported renderer type: " + renderer.GetType().Name);
             }
 
+            if (mesh == null)
+            {
+                throw new System.Exception("Renderer has no mesh: " + renderer.name);
+            }
+
             var context = new MeshEditContext()
             {
                 writableMeshData = MedlayWritableMeshData.Create(mesh, Allocator.Temp),
