@@ -6,5 +6,6 @@ namespace com.superneko.medlay.Editor
     {
         Matrix4x4 WorldToBaseMatrix { get; }
         Matrix4x4 BaseToWorldMatrix => WorldToBaseMatrix.inverse;
+        void TryGetContextData<T>(out T data);
     }
 }
