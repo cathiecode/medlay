@@ -1,0 +1,150 @@
+on:
+  workflow_dispatch:
+    inputs:
+      VERSION:
+        description: 'The version number for the tag (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  NAME: ${{ vars.NAME }}
+  RELEASE_BRANCH: ${{ vars.RELEASE_BRANCH }}
+  VPM_REPOSITORY: ${{ secrets.VPM_REPOSITORY }}
+  VERSION: ${{ github.event.inputs.VERSION }}
+
+jobs:
+  validate-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail the workflow
+        run: |
+          if [ -z "${{ env.NAME }}" ] || [ -z "${{ env.RELEASE_BRANCH }}" ] || [ -z "${{ env.VERSION }}" ] || [ -z "${{ env.VPM_REPOSITORY }}" ]; then
+            echo "Error: Missing required inputs or environment variables."
+            exit 1
+          fi
+
+  update-change-log-and-version:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+
+      - name: Update package.json version
+        run: |
+          jq --arg ver "${{ env.VERSION }}" '.version = $ver' package.json > /tmp/package.json && mv /tmp/package.json package.json
+
+      - name: Generate changelog
+        run: |
+          npx auto-changelog -p --template keepachangelog --commit-limit false --unreleased-only
+
+      - name: Commit and push changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for v${{ env.VERSION }}"
+          git push origin ${{ env.RELEASE_BRANCH }}
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "Bump version to v${{ env.VERSION }}"
+          git push origin ${{ env.RELEASE_BRANCH }}
+  
+  create-zip:
+    needs:
+      - validate-inputs
+      - update-change-log-and-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+
+      - name: Create ZIP archive
+        run: |
+          zip -r /tmp/${{ env.NAME }}-${{ env.VERSION }}.zip . -x "*.git*" "*.github*"
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}-${{ env.VERSION }}.zip
+          path: /tmp/${{ env.NAME }}-${{ env.VERSION }}.zip
+
+  create-release:
+    needs:
+      - validate-inputs
+      - create-zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+
+      - name: Download ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.NAME }}-${{ env.VERSION }}.zip
+          path: /tmp/
+
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "v${{ env.VERSION }}" -m "Release v${{ env.VERSION }}"
+          git push origin "v${{ env.VERSION }}"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ env.VERSION }}"
+          name: "v${{ env.VERSION }}"
+          body_path: CHANGELOG.md
+          files: |
+            /tmp/${{ env.NAME }}-${{ env.VERSION }}.zip
+            package.json
+  
+  update-vpm-listing:
+    needs:
+      - validate-inputs
+      - create-zip
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download VPM package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.NAME }}-${{ env.VERSION }}.zip
+          path: /tmp/
+
+
+      - name: Clone VPM listing
+        run: |
+          git clone ${{ secrets.VPM_REPOSITORY }} vpm-repository
+
+      - name: Setup github config
+        run: |
+          cd vpm-repository
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update VPM listing
+        run: |
+          cd vpm-repository
+          mkdir -p packages/${{ env.NAME }}
+          mv /tmp/${{ env.NAME }}-${{ env.VERSION }}.zip packages/${{ env.NAME }}/${{ env.NAME }}-${{ env.VERSION }}.zip
+
+      - name: Commit and push VPM listing changes
+        run: |
+          cd vpm-repository
+
+          git add .
+          git commit --allow-empty -m "Add ${{ env.NAME }} ${{ env.VERSION }}"
+
+          git push -u ${{ secrets.VPM_REPOSITORY }} main
