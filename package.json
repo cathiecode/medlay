@@ -1,6 +1,6 @@
 {
   "name": "com.superneko.medlay",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6",
   "unity": "2022.3",
   "description": "Non-destructive mesh editing framework for Unity.",
   "displayName": "Medlay: Mesh Editing by Layers",
