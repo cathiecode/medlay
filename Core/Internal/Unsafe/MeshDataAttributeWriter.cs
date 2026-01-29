@@ -23,46 +23,6 @@ namespace com.superneko.medlay.Core.Internal.Unsafe
                 allowSNorm8: false, allowSNorm16: false,
                 allowUNorm8: false, allowUNorm16: false);
 
-        public static void SetUV0(ref NativeArray<float2> inUv0, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord0, ref inUv0,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV1(ref NativeArray<float2> inUv1, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord1, ref inUv1,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV2(ref NativeArray<float2> inUv2, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord2, ref inUv2,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV3(ref NativeArray<float2> inUv3, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord3, ref inUv3,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV4(ref NativeArray<float2> inUv4, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord4, ref inUv4,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV5(ref NativeArray<float2> inUv5, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord5, ref inUv5,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV6(ref NativeArray<float2> inUv6, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord6, ref inUv6,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
-        public static void SetUV7(ref NativeArray<float2> inUv7, Mesh.MeshData meshData)
-            => SetF2(meshData, VertexAttribute.TexCoord7, ref inUv7,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-
         public static void SetNormals(ref NativeArray<float3> inNormals, Mesh.MeshData meshData)
             => SetF3(meshData, VertexAttribute.Normal, ref inNormals,
                 expectedDim: 3,
@@ -76,53 +36,6 @@ namespace com.superneko.medlay.Core.Internal.Unsafe
                 allowFloat32: true, allowFloat16: true,
                 allowSNorm8: true, allowSNorm16: true,
                 allowUNorm8: false, allowUNorm16: false);
-
-        public static void SetColors(ref NativeArray<float4> inColors, Mesh.MeshData meshData)
-            => SetF4(meshData, VertexAttribute.Color, ref inColors,
-                expectedDim: 4,
-                allowFloat32: true, allowFloat16: true,
-                allowSNorm8: false, allowSNorm16: false,
-                allowUNorm8: true, allowUNorm16: true);
-
-        public static void SetUVs(int channel, ref NativeArray<float2> inUvs, Mesh.MeshData meshData)
-        {
-            if ((uint)channel > 7u) { Throw($"[UV] channel must be 0..7, but was {channel}."); return; }
-            var attr = GetUvAttribute(channel);
-
-            SetF2(meshData, attr, ref inUvs,
-                expectedDim: 2,
-                allowFloat32: true, allowFloat16: true);
-        }
-
-        public static void SetUVs(int channel, ref NativeArray<float3> inUvs, Mesh.MeshData meshData)
-        {
-            if ((uint)channel > 7u) { Throw($"[UV] channel must be 0..7, but was {channel}."); return; }
-            var attr = GetUvAttribute(channel);
-
-            SetF3(meshData, attr, ref inUvs,
-                expectedDim: 3,
-                allowFloat32: true, allowFloat16: true,
-                allowSNorm8: false, allowSNorm16: false,
-                allowUNorm8: false, allowUNorm16: false);
-        }
-
-        public static void SetUVs(int channel, ref NativeArray<float4> inUvs, Mesh.MeshData meshData)
-        {
-            if ((uint)channel > 7u) { Throw($"[UV] channel must be 0..7, but was {channel}."); return; }
-            var attr = GetUvAttribute(channel);
-
-            SetF4(meshData, attr, ref inUvs,
-                expectedDim: 4,
-                allowFloat32: true, allowFloat16: true,
-                allowSNorm8: false, allowSNorm16: false,
-                allowUNorm8: false, allowUNorm16: false);
-        }
-
-        private static VertexAttribute GetUvAttribute(int channel)
-        {
-            // channel 0..7 -> TexCoord0..TexCoord7
-            return (VertexAttribute)((int)VertexAttribute.TexCoord0 + channel);
-        }
 
         // =========================
         // Core: resolve layout + dispatch
@@ -166,37 +79,6 @@ namespace com.superneko.medlay.Core.Internal.Unsafe
             long required = (long)offset + (long)(vertexCount - 1) * stride + bytes;
             if (required > vb.Length)
                 Throw($"[{attr}] Vertex buffer too small for computed layout.");
-        }
-
-        private static void SetF2(
-            Mesh.MeshData meshData,
-            VertexAttribute attr,
-            ref NativeArray<float2> src,
-            int expectedDim,
-            bool allowFloat32,
-            bool allowFloat16)
-        {
-            ValidateLengthOrThrow(src.Length, meshData.vertexCount, attr);
-
-            ResolveLayoutOrThrow(meshData, attr, expectedDim,
-                out int vertexCount, out var fmt, out _, out int offset, out int stride, out var vb);
-
-            switch (fmt)
-            {
-                case VertexAttributeFormat.Float32:
-                    if (!allowFloat32) Throw($"[{attr}] Float32 not allowed.");
-                    WriteFloat32_F2(ref src, ref vb, vertexCount, stride, offset);
-                    return;
-
-                case VertexAttributeFormat.Float16:
-                    if (!allowFloat16) Throw($"[{attr}] Float16 not allowed.");
-                    WriteFloat16_F2(ref src, ref vb, vertexCount, stride, offset);
-                    return;
-
-                default:
-                    Throw($"[{attr}] Unsupported format: {fmt}");
-                    return;
-            }
         }
 
         private static void SetF3(
