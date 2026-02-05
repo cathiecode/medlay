@@ -111,7 +111,7 @@ jobs:
           else
             TAG_PATTERN='[0-9]+\.[0-9]+\.[0-9]+'
           fi
-          npx auto-changelog --template keepachangelog --commit-limit false --tag-pattern $TAG_PATTERN
+          npx auto-changelog --template keepachangelog --commit-limit false --tag-pattern $TAG_PATTERN --starting-version ${{ env.VERSION }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
