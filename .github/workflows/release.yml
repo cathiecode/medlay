@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate changelog
         run: |
-          npx auto-changelog -p --template keepachangelog --commit-limit false --unreleased-only
+          npx auto-changelog -p --template keepachangelog --commit-limit false
 
       - name: Commit and push changelog
         run: |
