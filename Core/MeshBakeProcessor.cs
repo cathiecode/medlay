@@ -9,8 +9,6 @@ namespace com.superneko.medlay.Core
 {
     using com.superneko.medlay.Core.Internal.Unsafe;
     using Internal.Burst;
-    using UnityEngine.Rendering;
-
     /// <summary>
     /// Bakes and unbakes skinned meshes to and from world space.
     /// Please note that MeshBakeProcessor does not handle mesh attributes such as UVs, colors, triangles, etc.
@@ -196,8 +194,8 @@ namespace com.superneko.medlay.Core
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_Setup");
 
             var vertices = MeshDataUtils.Reinterpret(meshData.GetVertices());
-            var normals = meshData.HasVertexAttribute(VertexAttribute.Normal) ? MeshDataUtils.Reinterpret(meshData.GetNormals()) : default;
-            var tangents = meshData.HasVertexAttribute(VertexAttribute.Tangent) ? MeshDataUtils.Reinterpret(meshData.GetTangents()) : default;
+            var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
+            var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
             ResetArrays(meshData, renderer, bones, worldToBaseMatrix);
 
@@ -212,8 +210,8 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_StoreUnbakedReference");
             referenceUnbakedVertices.CopyFrom(vertices);
-            if (normals.IsCreated) referenceUnbakedNormals.CopyFrom(normals);
-            if (tangents.IsCreated) referenceUnbakedTangents.CopyFrom(tangents);
+            referenceUnbakedNormals.CopyFrom(normals);
+            referenceUnbakedTangents.CopyFrom(tangents);
             Profiler.EndSample();
 
             var allBoneWeights = meshData.GetAllBoneWeightsReadOnly();
@@ -238,8 +236,8 @@ namespace com.superneko.medlay.Core
 
             Profiler.BeginSample("MeshBakeProcessor.BakeMeshToWorld_StoreBakedReference");
             referenceBakedVertices.CopyFrom(vertices);
-            if (normals.IsCreated) referenceBakedNormals.CopyFrom(normals);
-            if (tangents.IsCreated) referenceBakedTangents.CopyFrom(tangents);
+            referenceBakedNormals.CopyFrom(normals);
+            referenceBakedTangents.CopyFrom(tangents);
             Profiler.EndSample();
 
             Profiler.EndSample();
@@ -259,8 +257,8 @@ namespace com.superneko.medlay.Core
             Profiler.BeginSample("MeshBakeProcessor.UnbakeMesh_Setup");
 
             var vertices = MeshDataUtils.Reinterpret(meshData.GetVertices());
-            var normals = meshData.HasVertexAttribute(VertexAttribute.Normal) ? MeshDataUtils.Reinterpret(meshData.GetNormals()) : default;
-            var tangents = meshData.HasVertexAttribute(VertexAttribute.Tangent) ? MeshDataUtils.Reinterpret(meshData.GetTangents()) : default;
+            var normals = MeshDataUtils.Reinterpret(meshData.GetNormals());
+            var tangents = MeshDataUtils.Reinterpret(meshData.GetTangents());
 
             ResetArrays(meshData, renderer, bones, worldToBaseMatrix, assumptions);
 

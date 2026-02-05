@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace com.superneko.medlay.Core
 {
@@ -46,18 +45,15 @@ namespace com.superneko.medlay.Core
             var originalNormals = mesh.normals;
             var originalTangents = mesh.tangents;
 
-            originalNormals = originalNormals.Length == 0 ? null : originalNormals;
-            originalTangents = originalTangents.Length == 0 ? null : originalTangents;
-
-            var hasNormals = originalNormals != null;
-            var hasTangents = originalTangents != null;
-
             var deformedMesh = context.Mesh;
 
             var vertices = deformedMesh.vertices;
-            var normals = hasNormals ? deformedMesh.normals : null;
-            var tmpTangents = hasTangents ? deformedMesh.tangents : null;
-            var tangents = hasTangents ? new Vector3[tmpTangents.Length] : null;
+            var normals = deformedMesh.normals;
+            var tmpTangents = deformedMesh.tangents;
+            var tangents = new Vector3[tmpTangents.Length];
+
+            var hasNormals = originalNormals.Length > 0;
+            var hasTangents = originalTangents.Length > 0;
 
             for (int i = 0; i < originalVertices.Length; i++)
             {
@@ -99,15 +95,8 @@ namespace com.superneko.medlay.Core
             disposed = true;
 
             mesh.SetVertices(context.WritableMeshData.GetVertices());
-
-            if (context.WritableMeshData.HasVertexAttribute(VertexAttribute.Normal)) {
-                mesh.SetNormals(context.WritableMeshData.GetNormals());
-            }
-
-            if (context.WritableMeshData.HasVertexAttribute(VertexAttribute.Tangent)) {
-                mesh.SetTangents(context.WritableMeshData.GetTangents());
-            }
-
+            mesh.SetNormals(context.WritableMeshData.GetNormals());
+            mesh.SetTangents(context.WritableMeshData.GetTangents());
             mesh.boneWeights = context.Mesh.boneWeights;
             mesh.bindposes = context.Mesh.bindposes;
 

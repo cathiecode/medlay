@@ -24,8 +24,8 @@ namespace com.superneko.medlay.Core.Internal.Burst
         )
         {
             int boneWeightIndex = 0;
-            bool hasNormals = normals.IsCreated;
-            bool hasTangents = tangents.IsCreated;
+            bool hasNormals = normals.Length > 0;
+            bool hasTangents = tangents.Length > 0;
             bool processingStaticMesh = bonesPerVertex.Length == 0;
 
             for (int i = 0; i < vertexCount; i++)
@@ -82,8 +82,8 @@ namespace com.superneko.medlay.Core.Internal.Burst
             ref NativeArray<float4> referenceUnbakedTangents
         )
         {
-            var hasNormal = normals.IsCreated;
-            var hasTangent = tangents.IsCreated;
+            var hasNormal = normals.Length > 0;
+            var hasTangent = tangents.Length > 0;
 
             int boneWeightIndex = 0;
             for (int i = 0; i < vertexCount; i++)

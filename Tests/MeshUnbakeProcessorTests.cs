@@ -111,18 +111,6 @@ namespace com.superneko.medlay.Tests
         }
 
         [Test]
-        public void UnbakeMesh_ProducesOriginalVertices_NoTangent()
-        {
-            UnbakeMesh_ProducesOriginalVertices("a5511dbbe8a974746a17c4b12ceef021");
-        }
-
-        [Test]
-        public void UnbakeMesh_ProducesOriginalVertices_NoNormal()
-        {
-            UnbakeMesh_ProducesOriginalVertices("69b70c08ab9c56e4fbaa9af8443b785a");
-        }
-
-        [Test]
         public void UnbakeMesh_ProducesOriginalVertices_SkinnedMeshAssignedToMeshRenderer()
         {
             var go = TestUtils.LoadAssetByGUID<GameObject>("e194e85a0547ae242874392a3eff7e96");

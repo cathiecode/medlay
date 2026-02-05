@@ -106,11 +106,10 @@ namespace com.superneko.medlay.Tests
         public void ProcessPipeline_CanProcessMeshRenderer()
         {
             var medlay = new Medlay();
-
+            
             var mr = TestUtils.LoadAssetByGUID<MeshRenderer>("2c2374503af4cd64da6dced339c0d2bd");
 
-            Assert.DoesNotThrow(() =>
-            {
+            Assert.DoesNotThrow(() => {
                 medlay.CreatePipeline(mr, new MeshEditLayer[0]).Process();
             });
         }
@@ -223,80 +222,6 @@ namespace com.superneko.medlay.Tests
 
                 Assert.Less((expected - actual).magnitude, 0.0001f);
             }
-        }
-
-        [Test]
-        public void ApplyToMeshAndPreserveBlendShape_NoNormal()
-        {
-            var medlay = new Medlay();
-
-            var smr = TestUtils.LoadAvatarSMR("69b70c08ab9c56e4fbaa9af8443b785a");
-
-            var originalMesh = smr.sharedMesh;
-            var deformedMesh = Object.Instantiate(originalMesh);
-
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
-
-            pipeline.Process().ApplyToMeshAndPreserveBlendShape(deformedMesh);
-
-            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
-            TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
-        }
-
-        [Test]
-        public void ApplyToMeshAndPreserveBlendShape_NoTangent()
-        {
-            var medlay = new Medlay();
-
-            var smr = TestUtils.LoadAvatarSMR("a5511dbbe8a974746a17c4b12ceef021");
-
-            var originalMesh = smr.sharedMesh;
-            var deformedMesh = Object.Instantiate(originalMesh);
-
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
-
-            // pipeline.Process().ApplyToMeshAndPreserveBlendShape(deformedMesh);
-
-            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
-            TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
-        }
-
-        [Test]
-        public void AddAsBlendShapeFrame_NoNormal()
-        {
-            var medlay = new Medlay();
-
-            var smr = TestUtils.LoadAvatarSMR("69b70c08ab9c56e4fbaa9af8443b785a");
-
-            var originalMesh = smr.sharedMesh;
-            var deformedMesh = Object.Instantiate(originalMesh);
-
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
-
-            var result = pipeline.Process();
-            result.AddAsBlendShapeFrame(deformedMesh, "TestShape", 100f);
-
-            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
-            TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
-        }
-
-        [Test]
-        public void AddAsBlendShapeFrame_NoTangent()
-        {
-            var medlay = new Medlay();
-
-            var smr = TestUtils.LoadAvatarSMR("a5511dbbe8a974746a17c4b12ceef021");
-
-            var originalMesh = smr.sharedMesh;
-            var deformedMesh = Object.Instantiate(originalMesh);
-
-            var pipeline = medlay.CreatePipeline(smr, new MeshEditLayer[0]);
-
-            var result = pipeline.Process();
-            result.AddAsBlendShapeFrame(deformedMesh, "TestShape", 100f);
-
-            TestUtils.AssertMeshesAreSame(originalMesh, deformedMesh, allowExactMatch: true);
-            TestUtils.AssertMeshDoesNotHaveNaN(deformedMesh);
         }
     }
 }

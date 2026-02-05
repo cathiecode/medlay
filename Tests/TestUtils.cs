@@ -45,12 +45,8 @@ namespace com.superneko.medlay.Tests
             var originalNormals = originalMesh.normals;
             var modifiedNormals = modifiedMesh.normals;
 
-            var hasNormals = originalNormals.Length > 0;
-
             var originalTangents = originalMesh.tangents;
             var modifiedTangents = modifiedMesh.tangents;
-
-            var hasTangents = originalTangents.Length > 0;
 
             var totalVerticesError = 0f;
             var totalNormalsError = 0f;
@@ -65,25 +61,20 @@ namespace com.superneko.medlay.Tests
                 Assert.AreEqual(originalMesh.vertexCount, modifiedMesh.vertexCount, "Vertex count does not match.");
 
                 var vertexError = (originalVertices[i] - modifiedVertices[i]).magnitude;
+                var normalError = (originalNormals[i] - modifiedNormals[i]).magnitude;
+                var tangentError = (originalTangents[i] - modifiedTangents[i]).magnitude;
+
                 Assert.Less(vertexError, 0.001f, $"Vertex {i} does not match.");
+                Assert.Less(normalError, 0.001f, $"Normal {i} does not match.");
+                Assert.Less(tangentError, 0.001f, $"Tangent {i} does not match.");
+
                 totalVerticesError += vertexError;
+                totalNormalsError += normalError;
+                totalTangentsError += tangentError;
+
                 if (vertexError > maxVertexError) maxVertexError = vertexError;
-
-                if (hasNormals)
-                {
-                    var normalError = (originalNormals[i] - modifiedNormals[i]).magnitude;
-                    Assert.Less(normalError, 0.001f, $"Normal {i} does not match.");
-                    totalNormalsError += normalError;
-                    if (normalError > maxNormalError) maxNormalError = normalError;
-                }
-
-                if (hasTangents)
-                {
-                    var tangentError = (originalTangents[i] - modifiedTangents[i]).magnitude;
-                    Assert.Less(tangentError, 0.001f, $"Tangent {i} does not match.");
-                    totalTangentsError += tangentError;
-                    if (tangentError > maxTangentError) maxTangentError = tangentError;
-                }
+                if (normalError > maxNormalError) maxNormalError = normalError;
+                if (tangentError > maxTangentError) maxTangentError = tangentError;
             }
 
             Debug.Log($"Vertex error avg:{totalVerticesError / originalMesh.vertexCount}, max:{maxVertexError}");
@@ -111,11 +102,7 @@ namespace com.superneko.medlay.Tests
 
             for (int i = 0; i < mesh.vertexCount; i++)
             {
-                var vertexIsNan = float.IsNaN(vertices[i].magnitude);
-                var normalIsNan = normals.Length == 0 ? false : float.IsNaN(normals[i].magnitude);
-                var tangentIsNan = tangents.Length == 0 ? false : float.IsNaN(tangents[i].magnitude);
-
-                if (vertexIsNan || normalIsNan || tangentIsNan)
+                if (float.IsNaN(vertices[i].magnitude) || float.IsNaN(normals[i].magnitude) || float.IsNaN(tangents[i].magnitude))
                 {
                     Assert.Fail("Mesh includes NaN");
                 }
