@@ -56,6 +56,11 @@ namespace com.superneko.medlay.Core
             return vertices;
         }
 
+        public bool HasVertexAttribute(VertexAttribute attribute)
+        {
+            return meshData.HasVertexAttribute(attribute);
+        }
+
         public NativeArray<Vector3> GetNormals()
         {
             if (normals.IsCreated)
